@@ -1901,13 +1901,54 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           ),
         ),
         const SizedBox(height: 24),
-        TextButton.icon(
-          onPressed: () => _showDeleteAccountDialog(theme),
-          icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
-          label: const Text('Delete Account', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.red.shade50.withOpacity(0.6),
+            border: Border.all(color: Colors.red.shade200.withOpacity(0.8)),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.red.shade800),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Danger Zone',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red.shade900,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Deleting your account is permanent and cannot be undone. All child profiles, schedules, and settings will be permanently lost.',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.red.shade800,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => _showDeleteAccountDialog(theme),
+                icon: const Icon(Icons.delete_forever_rounded),
+                label: const Text('Delete Account'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
