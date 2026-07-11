@@ -1970,27 +1970,46 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+        color: isSelected ? theme.colorScheme.primary.withOpacity(0.08) : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         clipBehavior: Clip.antiAlias,
-        child: ListTile(
-          leading: Icon(
-            icon,
-            color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.primary,
-          ),
-          title: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 5,
+              height: 48,
+              decoration: BoxDecoration(
+                color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(4),
+                  bottomRight: Radius.circular(4),
+                ),
+              ),
             ),
-          ),
-          onTap: () {
-            setState(() {
-              _currentIndex = index;
-            });
-            Navigator.pop(context); // Close the drawer
-          },
+            Expanded(
+              child: ListTile(
+                contentPadding: const EdgeInsets.only(left: 11, right: 16),
+                leading: Icon(
+                  icon,
+                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.primary.withOpacity(0.7),
+                ),
+                title: Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                onTap: () {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                  Navigator.pop(context); // Close the drawer
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
