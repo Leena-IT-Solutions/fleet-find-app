@@ -584,6 +584,314 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
+  Widget _buildDriverPage() {
+    final theme = Theme.of(context);
+    return FutureBuilder<Map<String, dynamic>>(
+      future: ApiService.getOrganization(organizationId: _selectedOrganizationId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError || snapshot.data == null || snapshot.data!['success'] == false) {
+          final errorMsg = snapshot.data?['message'] ?? 'Failed to load drivers.';
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline_rounded, size: 64, color: theme.colorScheme.error),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error Loading Drivers',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.error),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    errorMsg,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => setState(() {}),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final org = snapshot.data!['organization'] as Map<String, dynamic>;
+        final drivers = (org['drivers'] as List?) ?? [];
+        final allOrgs = (snapshot.data!['organizations'] as List?) ?? [];
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (allOrgs.length > 1) ...[
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int>(
+                        value: _selectedOrganizationId ?? org['id'],
+                        icon: Icon(Icons.keyboard_arrow_down_rounded, color: theme.colorScheme.primary),
+                        isExpanded: true,
+                        dropdownColor: theme.colorScheme.surface,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        items: allOrgs.map<DropdownMenuItem<int>>((dynamic o) {
+                          return DropdownMenuItem<int>(
+                            value: o['id'] as int,
+                            child: Text(o['name'] ?? 'N/A'),
+                          );
+                        }).toList(),
+                        onChanged: (int? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _selectedOrganizationId = newValue;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              Text(
+                'Registered Organization Drivers',
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'List of professional drivers configured for transit routes under ${org['name']}.',
+                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 16),
+              if (drivers.isEmpty)
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: Center(
+                      child: Text(
+                        'No drivers registered under this organization.',
+                        style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                ...drivers.map((d) => Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                          child: Icon(Icons.badge_rounded, color: theme.colorScheme.primary, size: 20),
+                        ),
+                        title: Text(
+                          d['driver_name'] ?? 'N/A',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text('License: ${d['license'] ?? 'N/A'}'),
+                        trailing: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Active',
+                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
+                          ),
+                        ),
+                      ),
+                    )),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAttendantPage() {
+    final theme = Theme.of(context);
+    return FutureBuilder<Map<String, dynamic>>(
+      future: ApiService.getOrganization(organizationId: _selectedOrganizationId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError || snapshot.data == null || snapshot.data!['success'] == false) {
+          final errorMsg = snapshot.data?['message'] ?? 'Failed to load attendants.';
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline_rounded, size: 64, color: theme.colorScheme.error),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error Loading Attendants',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.error),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    errorMsg,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => setState(() {}),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final org = snapshot.data!['organization'] as Map<String, dynamic>;
+        final attendants = (org['attendants'] as List?) ?? [];
+        final allOrgs = (snapshot.data!['organizations'] as List?) ?? [];
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (allOrgs.length > 1) ...[
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int>(
+                        value: _selectedOrganizationId ?? org['id'],
+                        icon: Icon(Icons.keyboard_arrow_down_rounded, color: theme.colorScheme.primary),
+                        isExpanded: true,
+                        dropdownColor: theme.colorScheme.surface,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        items: allOrgs.map<DropdownMenuItem<int>>((dynamic o) {
+                          return DropdownMenuItem<int>(
+                            value: o['id'] as int,
+                            child: Text(o['name'] ?? 'N/A'),
+                          );
+                        }).toList(),
+                        onChanged: (int? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _selectedOrganizationId = newValue;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              Text(
+                'Registered Organization Attendants',
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'List of professional transit attendants registered under ${org['name']}.',
+                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 16),
+              if (attendants.isEmpty)
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(24.0),
+                    child: Center(
+                      child: Text(
+                        'No attendants registered under this organization.',
+                        style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                ...attendants.map((a) => Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                          child: Icon(Icons.assignment_ind_rounded, color: theme.colorScheme.primary, size: 20),
+                        ),
+                        title: Text(
+                          a['attendant_name'] ?? 'N/A',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: const Text('Role: Route Assistant'),
+                        trailing: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Active',
+                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
+                          ),
+                        ),
+                      ),
+                    )),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildOrganizationPage() {
     final theme = Theme.of(context);
     return FutureBuilder<Map<String, dynamic>>(
@@ -1352,6 +1660,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       case 5:
         activeBody = _buildSearchPage();
         break;
+      case 6:
+        activeBody = _buildDriverPage();
+        break;
+      case 7:
+        activeBody = _buildAttendantPage();
+        break;
       default:
         activeBody = _buildHomePage(theme, userName, userEmail);
     }
@@ -1370,7 +1684,11 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                           ? 'Profile'
                           : _currentIndex == 5
                               ? 'Search'
-                              : widget.title,
+                              : _currentIndex == 6
+                                  ? 'Drivers'
+                                  : _currentIndex == 7
+                                      ? 'Attendants'
+                                      : widget.title,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),
@@ -1432,6 +1750,18 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       index: 3,
                       icon: Icons.business_rounded,
                       label: 'Organization',
+                      theme: theme,
+                    ),
+                    _buildDrawerItem(
+                      index: 6,
+                      icon: Icons.badge_rounded,
+                      label: 'Driver',
+                      theme: theme,
+                    ),
+                    _buildDrawerItem(
+                      index: 7,
+                      icon: Icons.assignment_ind_rounded,
+                      label: 'Attendant',
                       theme: theme,
                     ),
                     _buildDrawerItem(
