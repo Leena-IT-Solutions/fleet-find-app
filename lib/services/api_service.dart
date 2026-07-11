@@ -398,4 +398,73 @@ class ApiService {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
+
+  // Get Children API request
+  static Future<Map<String, dynamic>> getChildren() async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'No authentication token found'};
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/children'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'children': data['children']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to load children'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Add Child API request
+  static Future<Map<String, dynamic>> addChild({
+    required String name,
+    String? dob,
+    String? gender,
+    String? photoBase64,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'No authentication token found'};
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/children'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          if (dob != null) 'dob': dob,
+          if (gender != null) 'gender': gender,
+          if (photoBase64 != null) 'photo': photoBase64,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'child': data['child'], 'message': data['message']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to add child'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
 }

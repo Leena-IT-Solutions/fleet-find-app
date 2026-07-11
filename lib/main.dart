@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'screens/login_screen.dart';
@@ -514,25 +515,247 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   }
 
   Widget _buildParentPage() {
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        const Text(
-          'Registered Children & Schedule',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        _buildListCard(
-          title: 'Aarav Rathod',
-          subtitle: 'Grade 4 • Route A1 • Bus No. MH-12-3456',
-          icon: Icons.child_care_rounded,
-        ),
-        _buildListCard(
-          title: 'Kiara Rathod',
-          subtitle: 'Grade 1 • Route A1 • Bus No. MH-12-3456',
-          icon: Icons.child_care_rounded,
-        ),
-      ],
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: ApiService.getChildren(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError || snapshot.data == null || snapshot.data!['success'] == false) {
+            final errorMsg = snapshot.data?['message'] ?? 'Failed to load children.';
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline_rounded, size: 64, color: theme.colorScheme.error),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error Loading Children',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.error),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      errorMsg,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () => setState(() {}),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          final childrenList = (snapshot.data!['children'] as List?) ?? [];
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 24.0, bottom: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Registered Children & Schedule',
+                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Manage school transit registration profiles for your children.',
+                      style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: childrenList.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.child_care_rounded, size: 80, color: theme.colorScheme.primary.withOpacity(0.3)),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'No Children Registered',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Add your children to schedule their school bus trips and track transit statuses.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                              const SizedBox(height: 24),
+                              ElevatedButton.icon(
+                                onPressed: _showAddChildBottomSheet,
+                                icon: const Icon(Icons.add_rounded),
+                                label: const Text('Add First Child'),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                        itemCount: childrenList.length,
+                        itemBuilder: (context, index) {
+                          final child = childrenList[index];
+                          final dobStr = child['dob'] as String?;
+                          final gender = child['gender'] as String?;
+                          final childPhoto = child['photo'] as String?;
+
+                          // Age calculation helper
+                          String ageInfo = '';
+                          if (dobStr != null && dobStr.isNotEmpty) {
+                            try {
+                              final dob = DateTime.parse(dobStr);
+                              final now = DateTime.now();
+                              int age = now.year - dob.year;
+                              if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+                                age--;
+                              }
+                              ageInfo = age > 0 ? '$age Years Old' : 'Infant';
+                            } catch (_) {}
+                          }
+
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 30,
+                                    backgroundColor: theme.colorScheme.primaryContainer,
+                                    backgroundImage: childPhoto != null && childPhoto.isNotEmpty
+                                        ? NetworkImage(childPhoto)
+                                        : null,
+                                    child: childPhoto == null || childPhoto.isEmpty
+                                        ? Icon(
+                                            Icons.face_rounded,
+                                            size: 32,
+                                            color: theme.colorScheme.primary,
+                                          )
+                                        : null,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          child['name'] ?? 'N/A',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          children: [
+                                            if (gender != null && gender.isNotEmpty) ...[
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  gender,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: theme.colorScheme.primary,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                            ],
+                                            if (ageInfo.isNotEmpty)
+                                              Text(
+                                                ageInfo,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: Colors.grey.shade600,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        if (dobStr != null && dobStr.isNotEmpty)
+                                          Text(
+                                            'DOB: $dobStr',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade500,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.directions_bus_rounded,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          );
+        },
+      ),
+      floatingActionButton: FutureBuilder<Map<String, dynamic>>(
+        future: ApiService.getChildren(),
+        builder: (context, snapshot) {
+          final childrenList = (snapshot.data?['children'] as List?) ?? [];
+          if (childrenList.isEmpty) return const SizedBox.shrink();
+          return FloatingActionButton(
+            onPressed: _showAddChildBottomSheet,
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
+            child: const Icon(Icons.add_rounded),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showAddChildBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => _AddChildBottomSheet(
+        onSaved: () {
+          setState(() {});
+        },
+      ),
     );
   }
 
@@ -1851,6 +2074,376 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
+  }
+}
+
+class _AddChildBottomSheet extends StatefulWidget {
+  final VoidCallback onSaved;
+
+  const _AddChildBottomSheet({Key? key, required this.onSaved}) : super(key: key);
+
+  @override
+  State<_AddChildBottomSheet> createState() => _AddChildBottomSheetState();
+}
+
+class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  DateTime? _selectedDate;
+  String _gender = 'Male';
+  File? _imageFile;
+  String? _imageBase64;
+  bool _isSaving = false;
+  String _errorMsg = '';
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        final file = File(pickedFile.path);
+        final bytes = await file.readAsBytes();
+        final base64Str = 'data:image/${pickedFile.path.split('.').last};base64,${base64Encode(bytes)}';
+        setState(() {
+          _imageFile = file;
+          _imageBase64 = base64Str;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMsg = 'Error picking image: $e';
+      });
+    }
+  }
+
+  void _showImagePickerOptions() {
+    final theme = Theme.of(context);
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Select Child Photo Source',
+              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                child: Icon(Icons.camera_alt_rounded, color: theme.colorScheme.primary),
+              ),
+              title: const Text('Camera', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Take a new photo with camera'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                child: Icon(Icons.photo_library_rounded, color: theme.colorScheme.primary),
+              ),
+              title: const Text('From Phone', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Choose an existing photo from gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selectDate() async {
+    final now = DateTime.now();
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime(now.year - 8),
+      firstDate: DateTime(now.year - 18),
+      lastDate: now,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).colorScheme.primary,
+              onPrimary: Theme.of(context).colorScheme.onPrimary,
+              onSurface: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+    }
+  }
+
+  Future<void> _saveChild() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isSaving = true;
+      _errorMsg = '';
+    });
+
+    final dobFormatted = _selectedDate != null
+        ? '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}'
+        : null;
+
+    final response = await ApiService.addChild(
+      name: _nameController.text.trim(),
+      dob: dobFormatted,
+      gender: _gender,
+      photoBase64: _imageBase64,
+    );
+
+    if (mounted) {
+      setState(() {
+        _isSaving = false;
+      });
+
+      if (response['success'] == true) {
+        widget.onSaved();
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['message'] ?? 'Child added successfully.'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        setState(() {
+          _errorMsg = response['message'] ?? 'Failed to save child details.';
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final media = MediaQuery.of(context);
+
+    return Container(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 16,
+        bottom: media.viewInsets.bottom + 24,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Add Child Profile',
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // Photo Uploader circle
+              Center(
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                      backgroundImage: _imageFile != null ? FileImage(_imageFile!) : null,
+                      child: _imageFile == null
+                          ? Icon(
+                              Icons.face_rounded,
+                              size: 56,
+                              color: theme.colorScheme.primary,
+                            )
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Material(
+                        color: theme.colorScheme.primary,
+                        shape: const CircleBorder(),
+                        elevation: 2,
+                        child: IconButton(
+                          icon: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 20),
+                          onPressed: _showImagePickerOptions,
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.all(8),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              if (_errorMsg.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.errorContainer.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _errorMsg,
+                    style: TextStyle(color: theme.colorScheme.error, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              // Name Field
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: "Child's Name",
+                  prefixIcon: const Icon(Icons.person_outline_rounded),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter the name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              // Date of birth DatePicker trigger
+              InkWell(
+                onTap: _selectDate,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade400),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today_rounded, color: Colors.grey.shade600),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _selectedDate == null
+                              ? 'Date of Birth'
+                              : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: _selectedDate == null ? Colors.grey.shade600 : Colors.black87,
+                          ),
+                        ),
+                      ),
+                      Icon(Icons.chevron_right_rounded, color: Colors.grey.shade600),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Gender chips
+              Text(
+                'Gender',
+                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: ['Male', 'Female', 'Other'].map((g) {
+                  final isSel = _gender == g;
+                  return ChoiceChip(
+                    label: Text(g),
+                    selected: isSel,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() {
+                          _gender = g;
+                        });
+                      }
+                    },
+                    selectedColor: theme.colorScheme.primaryContainer,
+                    labelStyle: TextStyle(
+                      color: isSel ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                      fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 28),
+              ElevatedButton(
+                onPressed: _isSaving ? null : _saveChild,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: _isSaving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text(
+                        'Save Profile',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
