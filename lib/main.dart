@@ -730,29 +730,29 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     final isSelected = _currentIndex == index;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.primary,
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      child: Material(
+        color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          leading: Icon(
+            icon,
+            color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.primary,
           ),
+          title: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+          onTap: () {
+            setState(() {
+              _currentIndex = index;
+            });
+            Navigator.pop(context); // Close the drawer
+          },
         ),
-        selected: isSelected,
-        selectedTileColor: theme.colorScheme.primary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        onTap: () {
-          setState(() {
-            _currentIndex = index;
-          });
-          Navigator.pop(context); // Close the drawer
-        },
       ),
     );
   }
