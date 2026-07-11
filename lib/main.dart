@@ -58,6 +58,11 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   int _currentIndex = 2; // Default to Home page in the center
   late AnimationController _rotationController;
 
+  final TextEditingController _searchQueryController = TextEditingController();
+  List<dynamic> _searchResults = [];
+  bool _isSearching = false;
+  String _searchError = '';
+
   @override
   void initState() {
     super.initState();
@@ -66,12 +71,41 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       duration: const Duration(seconds: 3),
       vsync: this,
     )..repeat();
+    _performSearch('');
   }
 
   @override
   void dispose() {
     _rotationController.dispose();
+    _searchQueryController.dispose();
     super.dispose();
+  }
+
+  void _performSearch(String query) async {
+    setState(() {
+      _isSearching = true;
+      _searchError = '';
+    });
+    try {
+      final res = await ApiService.searchOrganizations(query);
+      if (res['success'] == true) {
+        setState(() {
+          _searchResults = res['organizations'] ?? [];
+        });
+      } else {
+        setState(() {
+          _searchError = res['message'] ?? 'Failed to load search results.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _searchError = 'Error: $e';
+      });
+    } finally {
+      setState(() {
+        _isSearching = false;
+      });
+    }
   }
 
   Future<void> _loadUser() async {
@@ -875,6 +909,174 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
+  Widget _buildSearchPage() {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Search TextField
+          TextField(
+            controller: _searchQueryController,
+            onChanged: (val) => _performSearch(val),
+            decoration: InputDecoration(
+              hintText: 'Search organizations by name, email, or address...',
+              prefixIcon: const Icon(Icons.search_rounded),
+              suffixIcon: _searchQueryController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear_rounded),
+                      onPressed: () {
+                        _searchQueryController.clear();
+                        _performSearch('');
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              filled: true,
+              fillColor: theme.colorScheme.surface,
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          if (_isSearching)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 20.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (_searchError.isNotEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20.0),
+                child: Text(
+                  _searchError,
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+              ),
+            )
+          else ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Organizations Found',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  Text(
+                    '${_searchResults.length} results',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: _searchResults.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No organizations found matching your search.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: _searchResults.length,
+                      itemBuilder: (context, index) {
+                        final org = _searchResults[index];
+                        final name = org['name'] ?? 'N/A';
+                        final email = org['email'] ?? 'N/A';
+                        final phone = org['number'] ?? 'N/A';
+                        final address = org['address'] ?? 'N/A';
+                        final logo = org['logo'] as String?;
+
+                        return Card(
+                          elevation: 0,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(
+                              color: theme.colorScheme.outlineVariant.withOpacity(0.4),
+                            ),
+                          ),
+                          child: ExpansionTile(
+                            leading: CircleAvatar(
+                              radius: 20,
+                              backgroundColor: theme.colorScheme.primaryContainer,
+                              backgroundImage: logo != null ? NetworkImage(logo) : null,
+                              child: logo == null
+                                  ? Icon(
+                                      Icons.business_rounded,
+                                      size: 20,
+                                      color: theme.colorScheme.onPrimaryContainer,
+                                    )
+                                  : null,
+                            ),
+                            title: Text(
+                              name,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(
+                              email,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Divider(),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.phone_rounded, size: 16, color: theme.colorScheme.primary),
+                                        const SizedBox(width: 8),
+                                        Text(phone, style: const TextStyle(fontSize: 13)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Icon(Icons.location_on_rounded, size: 16, color: theme.colorScheme.primary),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            address,
+                                            style: const TextStyle(fontSize: 13),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildProfilePage(ThemeData theme, String userName, String userEmail) {
     final userMobile = _user != null ? _user!['mobile'] ?? '' : '';
     final userPhoto = _user != null ? _user!['profile_photo'] : null;
@@ -1110,6 +1312,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       case 4:
         activeBody = _buildProfilePage(theme, userName, userEmail);
         break;
+      case 5:
+        activeBody = _buildSearchPage();
+        break;
       default:
         activeBody = _buildHomePage(theme, userName, userEmail);
     }
@@ -1126,7 +1331,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       ? 'Organization'
                       : _currentIndex == 4
                           ? 'Profile'
-                          : widget.title,
+                          : _currentIndex == 5
+                              ? 'Search'
+                              : widget.title,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ),
@@ -1188,6 +1395,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       index: 3,
                       icon: Icons.business_rounded,
                       label: 'Organization',
+                      theme: theme,
+                    ),
+                    _buildDrawerItem(
+                      index: 5,
+                      icon: Icons.search_rounded,
+                      label: 'Search',
                       theme: theme,
                     ),
                     _buildDrawerItem(
