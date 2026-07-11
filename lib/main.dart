@@ -192,18 +192,45 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
     String? dialogError;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Edit Profile Info'),
-          content: SingleChildScrollView(
+        builder: (context, setDialogState) => Container(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Edit Profile Info',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
                 if (dialogError != null) ...[
-                  Text(dialogError!, style: const TextStyle(color: Colors.red)),
-                  const SizedBox(height: 8),
+                  Text(dialogError!, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
+                  const SizedBox(height: 12),
                 ],
                 TextField(
                   controller: nameController,
@@ -250,38 +277,43 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                     helperStyle: const TextStyle(fontSize: 10),
                   ),
                 ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final response = await ApiService.updateProfile(
+                          name: nameController.text.trim(),
+                          email: emailController.text.trim(),
+                          mobile: mobileController.text.trim(),
+                          relationshipType: selectedRelationshipType,
+                          coParentPhoneOrEmail: coParentController.text.trim().isEmpty ? null : coParentController.text.trim(),
+                        );
+                        if (response['success'] == true) {
+                          final freshUser = await ApiService.getUser();
+                          setState(() {
+                            _user = freshUser;
+                          });
+                          if (context.mounted) Navigator.pop(context);
+                        } else {
+                          setDialogState(() {
+                            dialogError = response['message'];
+                          });
+                        }
+                      },
+                      child: const Text('Save'),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final response = await ApiService.updateProfile(
-                  name: nameController.text.trim(),
-                  email: emailController.text.trim(),
-                  mobile: mobileController.text.trim(),
-                  relationshipType: selectedRelationshipType,
-                  coParentPhoneOrEmail: coParentController.text.trim().isEmpty ? null : coParentController.text.trim(),
-                );
-                if (response['success'] == true) {
-                  final freshUser = await ApiService.getUser();
-                  setState(() {
-                    _user = freshUser;
-                  });
-                  if (context.mounted) Navigator.pop(context);
-                } else {
-                  setDialogState(() {
-                    dialogError = response['message'];
-                  });
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
         ),
       ),
     );
@@ -294,18 +326,45 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
     String? dialogError;
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Change Password'),
-          content: SingleChildScrollView(
+        builder: (context, setDialogState) => Container(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Change Password',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
                 if (dialogError != null) ...[
-                  Text(dialogError!, style: const TextStyle(color: Colors.red)),
-                  const SizedBox(height: 8),
+                  Text(dialogError!, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
+                  const SizedBox(height: 12),
                 ],
                 TextField(
                   controller: currentPasswordController,
@@ -324,43 +383,48 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   decoration: const InputDecoration(labelText: 'Confirm New Password'),
                   obscureText: true,
                 ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (passwordController.text != confirmPasswordController.text) {
+                          setDialogState(() {
+                            dialogError = 'New passwords do not match.';
+                          });
+                          return;
+                        }
+                        final response = await ApiService.changePassword(
+                          currentPassword: currentPasswordController.text,
+                          password: passwordController.text,
+                          confirmPassword: confirmPasswordController.text,
+                        );
+                        if (response['success'] == true) {
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Password updated successfully')),
+                            );
+                          }
+                        } else {
+                          setDialogState(() {
+                            dialogError = response['message'];
+                          });
+                        }
+                      },
+                      child: const Text('Change'),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (passwordController.text != confirmPasswordController.text) {
-                  setDialogState(() {
-                    dialogError = 'New passwords do not match.';
-                  });
-                  return;
-                }
-                final response = await ApiService.changePassword(
-                  currentPassword: currentPasswordController.text,
-                  password: passwordController.text,
-                  confirmPassword: confirmPasswordController.text,
-                );
-                if (response['success'] == true) {
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Password updated successfully')),
-                    );
-                  }
-                } else {
-                  setDialogState(() {
-                    dialogError = response['message'];
-                  });
-                }
-              },
-              child: const Text('Change'),
-            ),
-          ],
         ),
       ),
     );
@@ -503,67 +567,103 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   }
 
   void _showDeleteAccountDialog(ThemeData theme) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Account?'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Are you absolutely sure you want to delete your account?'),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                border: Border.all(color: Colors.red.shade300),
-                borderRadius: BorderRadius.circular(8),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Container(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Warning: This action is permanent. All your registered child profiles, history logs, and settings will be permanently lost.',
-                      style: TextStyle(fontSize: 12, color: Colors.red.shade900),
+              const SizedBox(height: 16),
+              Text(
+                'Delete Account?',
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Are you absolutely sure you want to delete your account?',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  border: Border.all(color: Colors.red.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Warning: This action is permanent. All your registered child profiles, history logs, and settings will be permanently lost.',
+                        style: TextStyle(fontSize: 12, color: Colors.red.shade900),
+                      ),
                     ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+
+                      final response = await ApiService.deleteAccount();
+                      if (mounted) {
+                        Navigator.pop(context);
+                        Navigator.pushReplacementNamed(context, '/login');
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Delete Account'),
                   ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              );
-
-              final response = await ApiService.deleteAccount();
-              if (mounted) {
-                Navigator.pop(context);
-                Navigator.pushReplacementNamed(context, '/login');
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Delete Account'),
-          ),
-        ],
       ),
     );
   }
