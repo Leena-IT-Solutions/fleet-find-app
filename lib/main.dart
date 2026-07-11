@@ -518,7 +518,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
   Widget _buildGroupPage() {
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 100),
       children: [
         const Text(
           'Transit Groups & Routes',
@@ -638,7 +638,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                        padding: const EdgeInsets.only(left: 24, right: 24, top: 8, bottom: 100),
                         itemCount: childrenList.length,
                         itemBuilder: (context, index) {
                           final child = childrenList[index];
@@ -1702,6 +1702,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       ),
                     )
                   : ListView.builder(
+                      padding: const EdgeInsets.only(left: 24, right: 24, bottom: 100),
                       itemCount: _searchResults.length,
                       itemBuilder: (context, index) {
                         final org = _searchResults[index];
@@ -1792,7 +1793,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     final userPhoto = _user != null ? _user!['profile_photo'] : null;
 
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 100),
       children: [
 
         Center(
