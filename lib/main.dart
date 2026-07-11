@@ -1794,11 +1794,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        const Text(
-          'My Account & Roles',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 24),
+
         Center(
           child: Column(
             children: [
