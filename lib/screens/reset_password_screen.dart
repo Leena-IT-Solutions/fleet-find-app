@@ -91,8 +91,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
+              const Color(0xFF2C3E50),
               const Color(0xFF1E293B),
-              const Color(0xFF334155),
               const Color(0xFF0F172A),
             ],
           ),
