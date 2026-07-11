@@ -549,31 +549,325 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildSearchPage() {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Search Transit System',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Search routes, drivers, stops...',
-              prefixIcon: const Icon(Icons.search_rounded),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+  Widget _buildOrganizationPage() {
+    final theme = Theme.of(context);
+    return FutureBuilder<Map<String, dynamic>>(
+      future: ApiService.getOrganization(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError || snapshot.data == null || snapshot.data!['success'] == false) {
+          final errorMsg = snapshot.data?['message'] ?? 'Failed to load organization details.';
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline_rounded, size: 64, color: theme.colorScheme.error),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error Loading Organization',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.error),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    errorMsg,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => setState(() {}),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Retry'),
+                  ),
+                ],
               ),
             ),
+          );
+        }
+
+        final org = snapshot.data!['organization'] as Map<String, dynamic>;
+        final orgName = org['name'] ?? 'N/A';
+        final orgEmail = org['email'] ?? 'N/A';
+        final orgPhone = org['number'] ?? 'N/A';
+        final orgAddress = org['address'] ?? 'N/A';
+        final orgLogo = org['logo'] as String?;
+
+        final vehiclesCount = org['vehicles_count']?.toString() ?? '0';
+        final driversCount = org['drivers_count']?.toString() ?? '0';
+        final attendantsCount = org['attendants_count']?.toString() ?? '0';
+        final routesCount = org['routes_count']?.toString() ?? '0';
+
+        final vehicles = (org['vehicles'] as List?) ?? [];
+        final drivers = (org['drivers'] as List?) ?? [];
+        final attendants = (org['attendants'] as List?) ?? [];
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Organization Header Card
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.4)),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 36,
+                        backgroundColor: theme.colorScheme.primaryContainer,
+                        backgroundImage: orgLogo != null ? NetworkImage(orgLogo) : null,
+                        child: orgLogo == null
+                            ? Icon(Icons.business_rounded, size: 36, color: theme.colorScheme.onPrimaryContainer)
+                            : null,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              orgName,
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Icon(Icons.email_outlined, size: 14, color: theme.colorScheme.primary),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    orgEmail,
+                                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(Icons.phone_outlined, size: 14, color: theme.colorScheme.primary),
+                                const SizedBox(width: 6),
+                                Text(
+                                  orgPhone,
+                                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Address Row
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.location_on_outlined, size: 18, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        orgAddress,
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Counts Grid
+              const Text(
+                'Fleet & Operations Metrics',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.5,
+                children: [
+                  _buildStatCard(theme, 'Vehicles', vehiclesCount, Icons.directions_bus_rounded),
+                  _buildStatCard(theme, 'Drivers', driversCount, Icons.badge_rounded),
+                  _buildStatCard(theme, 'Attendants', attendantsCount, Icons.supervised_user_circle_rounded),
+                  _buildStatCard(theme, 'Routes', routesCount, Icons.route_rounded),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Details Lists (Vehicles, Drivers, Attendants)
+              const Text(
+                'Registered Fleet Details',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+
+              // Vehicles Section
+              _buildSectionHeader(theme, 'Vehicles list', Icons.directions_bus_rounded),
+              if (vehicles.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: Text('No vehicles registered.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                )
+              else
+                ...vehicles.map((v) => Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                          child: Icon(Icons.directions_bus_rounded, color: theme.colorScheme.primary, size: 20),
+                        ),
+                        title: Text(
+                          v['registration_number'] ?? 'N/A',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(v['model'] ?? 'N/A'),
+                        trailing: Text(
+                          'Cap: ${v['capacity'] ?? 'N/A'}',
+                          style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    )),
+
+              const SizedBox(height: 16),
+
+              // Drivers Section
+              _buildSectionHeader(theme, 'Drivers list', Icons.badge_rounded),
+              if (drivers.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: Text('No drivers registered.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                )
+              else
+                ...drivers.map((d) => Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                          child: Icon(Icons.person_rounded, color: theme.colorScheme.primary, size: 20),
+                        ),
+                        title: Text(
+                          d['driver_name'] ?? 'N/A',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text('License: ${d['license'] ?? 'N/A'}'),
+                      ),
+                    )),
+
+              const SizedBox(height: 16),
+
+              // Attendants Section
+              _buildSectionHeader(theme, 'Attendants list', Icons.supervised_user_circle_rounded),
+              if (attendants.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: Text('No attendants registered.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+                )
+              else
+                ...attendants.map((a) => Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                      ),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                          child: Icon(Icons.person_outline_rounded, color: theme.colorScheme.primary, size: 20),
+                        ),
+                        title: Text(
+                          a['attendant_name'] ?? 'N/A',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    )),
+              const SizedBox(height: 60), // Extra spacing for bottom notched bar
+            ],
           ),
-          const SizedBox(height: 24),
-          const Center(
-            child: Text(
-              'Enter query to search transit routes.',
-              style: TextStyle(color: Colors.grey),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatCard(ThemeData theme, String label, String value, IconData icon) {
+    return Card(
+      elevation: 0,
+      color: theme.colorScheme.primaryContainer.withOpacity(0.15),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(icon, color: theme.colorScheme.primary, size: 22),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(ThemeData theme, String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, top: 4.0),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: theme.colorScheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
             ),
           ),
         ],
@@ -810,7 +1104,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         activeBody = _buildHomePage(theme, userName, userEmail);
         break;
       case 3:
-        activeBody = _buildSearchPage();
+        activeBody = _buildOrganizationPage();
         break;
       case 4:
         activeBody = _buildProfilePage(theme, userName, userEmail);
@@ -828,7 +1122,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
               : _currentIndex == 1
                   ? 'Parent Panel'
                   : _currentIndex == 3
-                      ? 'Search'
+                      ? 'Organization'
                       : _currentIndex == 4
                           ? 'Profile'
                           : widget.title,
@@ -888,8 +1182,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                     ),
                     _buildDrawerItem(
                       index: 3,
-                      icon: Icons.search_rounded,
-                      label: 'Search',
+                      icon: Icons.business_rounded,
+                      label: 'Organization',
                       theme: theme,
                     ),
                     _buildDrawerItem(
@@ -927,7 +1221,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
               _buildTabItem(index: 0, icon: Icons.group_rounded, label: 'Group'),
               _buildTabItem(index: 1, icon: Icons.supervisor_account_rounded, label: 'Parent'),
               const SizedBox(width: 48), // Spacer for center FAB
-              _buildTabItem(index: 3, icon: Icons.search_rounded, label: 'Search'),
+              _buildTabItem(index: 3, icon: Icons.business_rounded, label: 'Organization'),
               _buildTabItem(index: 4, icon: Icons.person_rounded, label: 'Profile'),
             ],
           ),

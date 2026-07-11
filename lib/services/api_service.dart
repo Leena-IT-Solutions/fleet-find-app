@@ -333,4 +333,33 @@ class ApiService {
       return {'success': true, 'message': 'Account deleted locally'};
     }
   }
+
+  // Get Organization details API request
+  static Future<Map<String, dynamic>> getOrganization() async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'No authentication token found'};
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/organization'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'organization': data['organization']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to load organization'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
 }
