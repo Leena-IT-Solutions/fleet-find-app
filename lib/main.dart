@@ -1173,15 +1173,15 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       theme: theme,
                     ),
                     _buildDrawerItem(
-                      index: 0,
-                      icon: Icons.group_rounded,
-                      label: 'Group',
-                      theme: theme,
-                    ),
-                    _buildDrawerItem(
                       index: 1,
                       icon: Icons.supervisor_account_rounded,
                       label: 'Parent',
+                      theme: theme,
+                    ),
+                    _buildDrawerItem(
+                      index: 0,
+                      icon: Icons.group_rounded,
+                      label: 'Group',
                       theme: theme,
                     ),
                     _buildDrawerItem(
@@ -1222,8 +1222,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildTabItem(index: 0, icon: Icons.group_rounded, label: 'Group'),
               _buildTabItem(index: 1, icon: Icons.supervisor_account_rounded, label: 'Parent'),
+              _buildTabItem(index: 0, icon: Icons.group_rounded, label: 'Group'),
               const SizedBox(width: 48), // Spacer for center FAB
               _buildTabItem(index: 3, icon: Icons.business_rounded, label: 'Organization'),
               _buildTabItem(index: 4, icon: Icons.person_rounded, label: 'Profile'),
