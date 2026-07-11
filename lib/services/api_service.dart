@@ -221,8 +221,6 @@ class ApiService {
     required String email,
     required String mobile,
     String? profilePhoto,
-    String? relationshipType,
-    String? coParentPhoneOrEmail,
   }) async {
     try {
       final token = await getToken();
@@ -242,8 +240,6 @@ class ApiService {
           'email': email,
           'mobile': mobile,
           if (profilePhoto != null) 'profile_photo': profilePhoto,
-          if (relationshipType != null) 'relationship_type': relationshipType,
-          if (coParentPhoneOrEmail != null) 'co_parent_phone_or_email': coParentPhoneOrEmail,
         }),
       );
       final data = jsonDecode(response.body);
