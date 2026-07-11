@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'screens/login_screen.dart';
+import 'screens/create_group_screen.dart';
+import 'screens/group_detail_screen.dart';
 import 'services/api_service.dart';
 import 'services/location_service.dart';
 
@@ -71,6 +73,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   String _searchError = '';
   int? _selectedOrganizationId;
 
+  // Group Feature State Variables
+  List<dynamic> _groups = [];
+  bool _isGroupsLoading = true;
+  String? _groupsError;
+  bool _isLocationSharingOn = false;
+
   @override
   void initState() {
     super.initState();
@@ -80,6 +88,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       vsync: this,
     )..repeat();
     _performSearch('');
+    _loadLocationSharingState();
+    _fetchGroups();
   }
 
   @override
@@ -121,6 +131,54 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     if (user != null) {
       setState(() {
         _user = user;
+      });
+    }
+  }
+
+  void _loadLocationSharingState() {
+    setState(() {
+      _isLocationSharingOn = LocationService().isTracking;
+    });
+  }
+
+  Future<void> _toggleLocationSharing(bool val) async {
+    setState(() {
+      _isLocationSharingOn = val;
+    });
+    if (val) {
+      final success = await LocationService().startTracking();
+      if (!success) {
+        setState(() {
+          _isLocationSharingOn = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to start location sharing. Please grant location permissions.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } else {
+      await LocationService().stopTracking();
+    }
+  }
+
+  Future<void> _fetchGroups() async {
+    setState(() {
+      _isGroupsLoading = true;
+      _groupsError = null;
+    });
+    final res = await ApiService.getGroups();
+    if (mounted) {
+      setState(() {
+        _isGroupsLoading = false;
+        if (res['success'] == true) {
+          _groups = res['groups'] ?? [];
+        } else {
+          _groupsError = res['message'] ?? 'Failed to load groups.';
+        }
       });
     }
   }
@@ -523,25 +581,170 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   }
 
   Widget _buildGroupPage() {
-    return ListView(
-      padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 100),
-      children: [
-        const Text(
-          'Transit Groups & Routes',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    final theme = Theme.of(context);
+    return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final created = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateGroupScreen()),
+          );
+          if (created == true) {
+            _fetchGroups();
+          }
+        },
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Create Group', style: TextStyle(fontWeight: FontWeight.bold)),
+      ),
+      body: RefreshIndicator(
+        onRefresh: _fetchGroups,
+        child: ListView(
+          padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 100),
+          children: [
+            // Location sharing toggle card
+            Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.colorScheme.primary.withOpacity(0.12)),
+              ),
+              color: theme.colorScheme.primary.withOpacity(0.04),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: _isLocationSharingOn ? Colors.green.shade100 : Colors.grey.shade200,
+                      child: Icon(
+                        _isLocationSharingOn ? Icons.location_on_rounded : Icons.location_off_rounded,
+                        color: _isLocationSharingOn ? Colors.green.shade800 : Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Share My Location',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _isLocationSharingOn
+                                ? 'Broadcasting live location to your group members.'
+                                : 'Location sharing is turned off.',
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: _isLocationSharingOn,
+                      onChanged: _toggleLocationSharing,
+                      activeColor: Colors.green.shade700,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'My Transit Groups',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                if (!_isGroupsLoading)
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded),
+                    onPressed: _fetchGroups,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_isGroupsLoading)
+              const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
+            else if (_groupsError != null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    children: [
+                      Icon(Icons.error_outline_rounded, size: 48, color: theme.colorScheme.error),
+                      const SizedBox(height: 12),
+                      Text(_groupsError!, textAlign: TextAlign.center),
+                      const SizedBox(height: 12),
+                      ElevatedButton(onPressed: _fetchGroups, child: const Text('Retry')),
+                    ],
+                  ),
+                ),
+              )
+            else if (_groups.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 48.0),
+                child: Column(
+                  children: [
+                    Icon(Icons.group_work_outlined, size: 64, color: theme.colorScheme.primary.withOpacity(0.3)),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No Transit Groups Yet',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Create a group or ask an admin to add you using your email/mobile.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ..._groups.map((group) {
+                final name = group['name'] ?? 'Unnamed Group';
+                final desc = group['description'] ?? 'No description provided.';
+                final membersCount = group['members_count'] ?? 0;
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    leading: CircleAvatar(
+                      backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                      child: Icon(Icons.group_rounded, color: theme.colorScheme.primary),
+                    ),
+                    title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(
+                      '$membersCount member${membersCount == 1 ? "" : "s"} • $desc',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+                    onTap: () async {
+                      final updated = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => GroupDetailScreen(
+                            groupId: group['id'],
+                            groupName: name,
+                          ),
+                        ),
+                      );
+                      if (updated == true) {
+                        _fetchGroups();
+                      }
+                    },
+                  ),
+                );
+              }),
+          ],
         ),
-        const SizedBox(height: 16),
-        _buildListCard(
-          title: 'Primary School Shift A',
-          subtitle: 'Route A1 • 15 Stops • 28 Students',
-          icon: Icons.school_rounded,
-        ),
-        _buildListCard(
-          title: 'High School Route B',
-          subtitle: 'Route B2 • 10 Stops • 19 Students',
-          icon: Icons.directions_bus_rounded,
-        ),
-      ],
+      ),
     );
   }
 
