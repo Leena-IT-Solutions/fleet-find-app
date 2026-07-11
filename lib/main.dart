@@ -592,12 +592,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Registered Children & Schedule',
+                      'My Children',
                       style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Manage school transit registration profiles for your children.',
+                      'Here parents add and manage their children for school transit.',
                       style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
                     ),
                   ],
