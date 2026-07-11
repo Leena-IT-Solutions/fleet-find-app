@@ -72,6 +72,12 @@
 		<string>This app requires access to your camera to take a profile photo.</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>This app requires access to your microphone to capture video for profile updates.</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>FleetFind uses your location to share it with group members.</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>FleetFind needs background location access to keep sharing your location with your group even when the app is in the background.</string>
+		<key>NSLocationAlwaysUsageDescription</key>
+		<string>FleetFind needs location access in the background to share location voluntarily with group members.</string>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>
