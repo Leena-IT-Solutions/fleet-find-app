@@ -440,6 +440,7 @@ class ApiService {
     String? dob,
     String? gender,
     String? photoBase64,
+    String? relationshipType,
   }) async {
     try {
       final token = await getToken();
@@ -459,6 +460,7 @@ class ApiService {
           if (dob != null) 'dob': dob,
           if (gender != null) 'gender': gender,
           if (photoBase64 != null) 'photo': photoBase64,
+          if (relationshipType != null) 'relationship_type': relationshipType,
         }),
       );
 
@@ -481,6 +483,7 @@ class ApiService {
     String? dob,
     String? gender,
     String? photoBase64,
+    String? relationshipType,
   }) async {
     try {
       final token = await getToken();
@@ -500,6 +503,7 @@ class ApiService {
           if (dob != null) 'dob': dob,
           if (gender != null) 'gender': gender,
           if (photoBase64 != null) 'photo': photoBase64,
+          if (relationshipType != null) 'relationship_type': relationshipType,
         }),
       );
 

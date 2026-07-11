@@ -2527,6 +2527,7 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
   final _nameController = TextEditingController();
   DateTime? _selectedDate;
   String _gender = 'Male';
+  String _relationshipType = 'Mother';
   File? _imageFile;
   String? _imageBase64;
   bool _isSaving = false;
@@ -2538,6 +2539,7 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
     if (widget.child != null) {
       _nameController.text = widget.child!['name'] ?? '';
       _gender = widget.child!['gender'] ?? 'Male';
+      _relationshipType = widget.child!['relationship_type'] ?? 'Mother';
       final dobStr = widget.child!['dob'] as String?;
       if (dobStr != null && dobStr.isNotEmpty) {
         try {
@@ -2677,6 +2679,7 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
             dob: dobFormatted,
             gender: _gender,
             photoBase64: _imageBase64,
+            relationshipType: _relationshipType,
           )
         : await ApiService.updateChild(
             widget.child!['id'],
@@ -2684,6 +2687,7 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
             dob: dobFormatted,
             gender: _gender,
             photoBase64: _imageBase64,
+            relationshipType: _relationshipType,
           );
 
     if (mounted) {
@@ -2883,6 +2887,28 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
                     ),
                   );
                 }).toList(),
+              ),
+              const SizedBox(height: 20),
+              DropdownButtonFormField<String>(
+                value: _relationshipType,
+                decoration: InputDecoration(
+                  labelText: 'Your Relationship to Child',
+                  prefixIcon: const Icon(Icons.people_outline_rounded),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                items: ['Mother', 'Father', 'Guardian', 'Other'].map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    if (value != null) {
+                      _relationshipType = value;
+                    }
+                  });
+                },
               ),
               const SizedBox(height: 28),
               ElevatedButton(
