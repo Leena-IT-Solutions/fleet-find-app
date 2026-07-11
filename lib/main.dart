@@ -1091,6 +1091,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     final theme = Theme.of(context);
     final userName = _user != null ? _user!['name'] ?? 'User' : 'User';
     final userEmail = _user != null ? _user!['email'] ?? '' : '';
+    final userPhoto = _user != null ? _user!['profile_photo'] as String? : null;
 
     Widget activeBody;
     switch (_currentIndex) {
@@ -1138,14 +1139,17 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
               ),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: theme.colorScheme.onPrimary,
-                child: Text(
-                  userName.isNotEmpty ? userName[0] : 'U',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
+                backgroundImage: userPhoto != null && userPhoto.isNotEmpty ? NetworkImage(userPhoto) : null,
+                child: userPhoto == null || userPhoto.isEmpty
+                    ? Text(
+                        userName.isNotEmpty ? userName[0] : 'U',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
+                      )
+                    : null,
               ),
               accountName: Text(
                 userName,
@@ -1157,7 +1161,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
               ),
             ),
             Expanded(
-              child: Container(
+              child: Material(
                 color: theme.colorScheme.primary.withOpacity(0.02),
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
