@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'screens/login_screen.dart';
 import 'screens/create_group_screen.dart';
 import 'screens/group_detail_screen.dart';
+import 'screens/child_detail_screen.dart';
 import 'services/api_service.dart';
 import 'services/location_service.dart';
 
@@ -47,6 +48,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const MyHomePage(title: 'FleetFind Operations Board'),
+        '/child-detail': (context) => const ChildDetailScreen(),
       },
     );
   }
@@ -949,10 +951,22 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                               borderRadius: BorderRadius.circular(16),
                               side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Row(
-                                children: [
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () async {
+                                final result = await Navigator.pushNamed(
+                                  context,
+                                  '/child-detail',
+                                  arguments: child,
+                                );
+                                if (result == true) {
+                                  setState(() {});
+                                }
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Row(
+                                  children: [
                                   CircleAvatar(
                                     radius: 30,
                                     backgroundColor: theme.colorScheme.primaryContainer,
@@ -1054,6 +1068,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                 ],
                               ),
                             ),
+                           ),
                           );
                         },
                       ),
