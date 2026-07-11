@@ -537,4 +537,282 @@ class ApiService {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
+
+  // Get User's Groups
+  static Future<Map<String, dynamic>> getGroups() async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/groups'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'groups': data['groups']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to get groups'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Create Group
+  static Future<Map<String, dynamic>> createGroup(String name, String? description) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/groups'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'description': description,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 201) {
+        return {'success': true, 'group': data['group'], 'message': data['message']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to create group'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Get Group Detail (Members and location list)
+  static Future<Map<String, dynamic>> getGroupDetail(int id) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/groups/$id'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'group': data['group'],
+          'members': data['members'],
+        };
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to get group details'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Update Group
+  static Future<Map<String, dynamic>> updateGroup(int id, String name, String? description) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/groups/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'description': description,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'group': data['group'], 'message': data['message']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to update group'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Delete Group
+  static Future<Map<String, dynamic>> deleteGroup(int id) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/groups/$id'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to delete group'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Add Group Member
+  static Future<Map<String, dynamic>> addGroupMember(int groupId, String emailOrMobile) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/groups/$groupId/members'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'search': emailOrMobile,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'member': data['member'], 'message': data['message']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to add member'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Remove Group Member
+  static Future<Map<String, dynamic>> removeGroupMember(int groupId, int userId) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/groups/$groupId/members/$userId'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to remove member'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Update Member Role
+  static Future<Map<String, dynamic>> updateMemberRole(int groupId, int userId, String role) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.patch(
+        Uri.parse('$baseUrl/groups/$groupId/members/$userId/role'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'role': role,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to update role'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Update User Location
+  static Future<Map<String, dynamic>> updateLocation(double? lat, double? lng, bool sharingEnabled) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.patch(
+        Uri.parse('$baseUrl/location'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'latitude': lat,
+          'longitude': lng,
+          'location_sharing_enabled': sharingEnabled,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'user': data['user'], 'message': data['message']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to update location'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Get Location Update Interval Setting
+  static Future<Map<String, dynamic>> getLocationInterval() async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/settings/location-interval'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'location_update_interval_seconds': data['location_update_interval_seconds']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to get location interval'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
 }
