@@ -42,7 +42,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result['message'] ?? 'Verification code sent to your email.'),
-            backgroundColor: Colors.indigoAccent,
+            backgroundColor: const Color(0xFF475569),
           ),
         );
         Navigator.push(
@@ -70,9 +70,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.indigo.shade900,
-              Colors.indigo.shade800,
-              Colors.blueGrey.shade900,
+              const Color(0xFF1E293B),
+              const Color(0xFF334155),
+              const Color(0xFF0F172A),
             ],
           ),
         ),
@@ -100,7 +100,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     Icon(
                       Icons.lock_reset_rounded,
                       size: 80,
-                      color: Colors.indigo.shade100,
+                      color: const Color(0xFFE2E8F0),
                     ),
                     const SizedBox(height: 16),
 
@@ -119,7 +119,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       'Enter your email address and we will send you a 6-digit verification code to reset your password.',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.indigo.shade200,
+                        color: const Color(0xFFCBD5E1),
                         height: 1.4,
                       ),
                     ),
@@ -164,7 +164,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.indigoAccent),
+                          borderSide: const BorderSide(color: Color(0xFF64748B)),
                         ),
                       ),
                       validator: (value) {
@@ -183,7 +183,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ElevatedButton(
                       onPressed: _isLoading ? null : _handleForgotPassword,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.indigoAccent,
+                        backgroundColor: const Color(0xFF475569),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(

@@ -22,14 +22,14 @@ class MyApp extends StatelessWidget {
       title: 'FleetFind',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
+          seedColor: const Color(0xFF2C3E50),
           brightness: Brightness.light,
         ),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
+          seedColor: const Color(0xFF2C3E50),
           brightness: Brightness.dark,
         ),
         useMaterial3: true,

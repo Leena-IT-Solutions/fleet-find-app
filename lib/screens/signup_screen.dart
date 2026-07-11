@@ -87,9 +87,9 @@ class _SignupScreenState extends State<SignupScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.indigo.shade900,
-              Colors.indigo.shade800,
-              Colors.blueGrey.shade900,
+              const Color(0xFF1E293B),
+              const Color(0xFF334155),
+              const Color(0xFF0F172A),
             ],
           ),
         ),
@@ -128,7 +128,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       'Join FleetFind to keep track of operations',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.indigo.shade200,
+                        color: const Color(0xFFCBD5E1),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -172,7 +172,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.indigoAccent),
+                          borderSide: const BorderSide(color: Color(0xFF64748B)),
                         ),
                       ),
                       validator: (value) {
@@ -206,7 +206,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.indigoAccent),
+                          borderSide: const BorderSide(color: Color(0xFF64748B)),
                         ),
                       ),
                       validator: (value) {
@@ -243,7 +243,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.indigoAccent),
+                          borderSide: const BorderSide(color: Color(0xFF64748B)),
                         ),
                       ),
                       validator: (value) {
@@ -288,7 +288,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.indigoAccent),
+                          borderSide: const BorderSide(color: Color(0xFF64748B)),
                         ),
                       ),
                       validator: (value) {
@@ -335,7 +335,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.indigoAccent),
+                          borderSide: const BorderSide(color: Color(0xFF64748B)),
                         ),
                       ),
                       validator: (value) {
@@ -354,7 +354,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ElevatedButton(
                       onPressed: _isLoading ? null : _handleSignup,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.indigoAccent,
+                        backgroundColor: const Color(0xFF475569),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -391,7 +391,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           child: const Text(
                             'Sign In',
                             style: TextStyle(
-                              color: Colors.indigoAccent,
+                              color: Color(0xFF94A3B8),
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
                             ),

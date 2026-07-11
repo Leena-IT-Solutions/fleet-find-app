@@ -76,9 +76,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.indigo.shade900,
-              Colors.indigo.shade800,
-              Colors.blueGrey.shade900,
+              const Color(0xFF1E293B),
+              const Color(0xFF334155),
+              const Color(0xFF0F172A),
             ],
           ),
         ),
@@ -119,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       'Sign in to access your transit details',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.indigo.shade200,
+                        color: const Color(0xFFCBD5E1),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -163,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.indigoAccent),
+                          borderSide: const BorderSide(color: Color(0xFF64748B)),
                         ),
                       ),
                       validator: (value) {
@@ -214,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.indigoAccent),
+                          borderSide: const BorderSide(color: Color(0xFF64748B)),
                         ),
                       ),
                       validator: (value) {
@@ -238,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         child: Text(
                           'Forgot Password?',
                           style: TextStyle(
-                            color: Colors.indigo.shade200,
+                            color: const Color(0xFFCBD5E1),
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
                           ),
@@ -251,7 +251,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     ElevatedButton(
                       onPressed: _isLoading ? null : _handleLogin,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.indigoAccent,
+                        backgroundColor: const Color(0xFF475569),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -293,7 +293,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           child: const Text(
                             'Sign Up',
                             style: TextStyle(
-                              color: Colors.indigoAccent,
+                              color: Color(0xFF94A3B8),
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
                             ),
