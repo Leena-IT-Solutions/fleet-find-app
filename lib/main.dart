@@ -410,8 +410,33 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Account?'),
-        content: const Text(
-          'Are you absolutely sure you want to delete your account? This action is permanent and cannot be undone.',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Are you absolutely sure you want to delete your account?'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                border: Border.all(color: Colors.red.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Warning: This action is permanent. All your registered child profiles, history logs, and settings will be permanently lost.',
+                      style: TextStyle(fontSize: 12, color: Colors.red.shade900),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -809,7 +834,34 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Child Profile?'),
-        content: Text('Are you sure you want to delete ${child['name']}\'s profile? This action cannot be undone.'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Are you sure you want to delete ${child['name']}\'s profile?'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                border: Border.all(color: Colors.amber.shade300),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.amber.shade800, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Warning: This will permanently remove this child\'s profile and all associated ride records.',
+                      style: TextStyle(fontSize: 12, color: Colors.amber.shade900),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1849,19 +1901,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           ),
         ),
         const SizedBox(height: 24),
-        ElevatedButton.icon(
-          onPressed: _handleLogout,
-          icon: const Icon(Icons.logout_rounded),
-          label: const Text('Sign Out'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red.shade50,
-            foregroundColor: Colors.red.shade700,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 0,
-          ),
-        ),
-        const SizedBox(height: 12),
         TextButton.icon(
           onPressed: () => _showDeleteAccountDialog(theme),
           icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
