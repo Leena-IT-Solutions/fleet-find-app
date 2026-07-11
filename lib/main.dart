@@ -931,10 +931,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           ),
         ),
         const SizedBox(height: 32),
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 0,
+        Material(
+          type: MaterialType.card,
           color: theme.colorScheme.primary.withOpacity(0.02),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -977,10 +977,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           ),
         ),
         const SizedBox(height: 16),
-        Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 0,
+        Material(
+          type: MaterialType.card,
           color: theme.colorScheme.primary.withOpacity(0.02),
+          borderRadius: BorderRadius.circular(16),
           child: ListTile(
             leading: const Icon(Icons.lock_outline_rounded),
             title: const Text('Change Password', style: TextStyle(fontWeight: FontWeight.bold)),
