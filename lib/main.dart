@@ -2068,7 +2068,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.primaryContainer,
+        backgroundColor: theme.colorScheme.primary,
+        iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
         title: Text(
           _currentIndex == 0
               ? 'Groups'
@@ -2085,7 +2086,11 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                   : _currentIndex == 7
                                       ? 'Attendants'
                                       : widget.title,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: theme.colorScheme.onPrimary,
+          ),
         ),
       ),
       drawer: Drawer(
