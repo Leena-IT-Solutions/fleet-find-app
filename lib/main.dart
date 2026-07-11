@@ -778,11 +778,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                           v['registration_number'] ?? 'N/A',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        subtitle: Text(v['model'] ?? 'N/A'),
-                        trailing: Text(
-                          'Cap: ${v['capacity'] ?? 'N/A'}',
-                          style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
-                        ),
+                        subtitle: Text(v['type'] ?? 'N/A'),
                       ),
                     )),
 
