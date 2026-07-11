@@ -187,6 +187,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     final nameController = TextEditingController(text: _user?['name'] ?? '');
     final emailController = TextEditingController(text: _user?['email'] ?? '');
     final mobileController = TextEditingController(text: _user?['mobile'] ?? '');
+    final coParentController = TextEditingController(text: _user?['co_parent_phone_or_email'] ?? '');
+    String? selectedRelationshipType = _user?['relationship_type'] ?? 'Mother';
 
     String? dialogError;
 
@@ -219,6 +221,35 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   decoration: const InputDecoration(labelText: 'Mobile Number'),
                   keyboardType: TextInputType.phone,
                 ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: selectedRelationshipType,
+                  decoration: const InputDecoration(labelText: 'Who are you?'),
+                  items: ['Mother', 'Father', 'Guardian', 'Other'].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedRelationshipType = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: coParentController,
+                  decoration: InputDecoration(
+                    labelText: selectedRelationshipType == 'Father'
+                        ? 'Link Mother (Email or Mobile)'
+                        : selectedRelationshipType == 'Mother'
+                            ? 'Link Father (Email or Mobile)'
+                            : 'Link Co-Parent (Email or Mobile)',
+                    helperText: 'Links children profiles & tracking network',
+                    helperStyle: const TextStyle(fontSize: 10),
+                  ),
+                ),
               ],
             ),
           ),
@@ -233,6 +264,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   name: nameController.text.trim(),
                   email: emailController.text.trim(),
                   mobile: mobileController.text.trim(),
+                  relationshipType: selectedRelationshipType,
+                  coParentPhoneOrEmail: coParentController.text.trim().isEmpty ? null : coParentController.text.trim(),
                 );
                 if (response['success'] == true) {
                   final freshUser = await ApiService.getUser();
@@ -2062,9 +2095,31 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.phone_iphone),
+                  leading: const Icon(Icons.phone_outlined),
                   title: const Text('Mobile Number', style: TextStyle(fontSize: 12, color: Colors.grey)),
                   subtitle: Text(userMobile, style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.people_outline_rounded),
+                  title: const Text('Relationship', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  subtitle: Text(_user?['relationship_type'] ?? 'Mother', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.link_rounded),
+                  title: const Text('Linked Co-Parent', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  subtitle: _user?['co_parent'] != null
+                      ? Text(
+                          "${_user!['co_parent']['name']} (${_user!['co_parent']['relationship_type']})",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        )
+                      : _user?['co_parent_phone_or_email'] != null
+                          ? Text(
+                              "${_user!['co_parent_phone_or_email']} (Pending Sign Up)",
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                            )
+                          : const Text('Not linked', style: TextStyle(fontWeight: FontWeight.normal, color: Colors.grey)),
                 ),
               ],
             ),

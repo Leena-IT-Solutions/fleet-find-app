@@ -15,7 +15,9 @@ class _SignupScreenState extends State<SignupScreen> {
   final _mobileController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _coParentController = TextEditingController();
 
+  String? _selectedRelationshipType = 'Mother';
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -29,6 +31,7 @@ class _SignupScreenState extends State<SignupScreen> {
     _mobileController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _coParentController.dispose();
     super.dispose();
   }
 
@@ -47,6 +50,8 @@ class _SignupScreenState extends State<SignupScreen> {
       mobile: _mobileController.text.trim(),
       password: _passwordController.text,
       confirmPassword: _confirmPasswordController.text,
+      relationshipType: _selectedRelationshipType,
+      coParentPhoneOrEmail: _coParentController.text.trim().isEmpty ? null : _coParentController.text.trim(),
     );
 
     setState(() {
@@ -252,6 +257,77 @@ class _SignupScreenState extends State<SignupScreen> {
                         }
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Who are you dropdown
+                    DropdownButtonFormField<String>(
+                      value: _selectedRelationshipType,
+                      dropdownColor: const Color(0xFF1E293B),
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Who are you?',
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        prefixIcon: const Icon(Icons.people_outline_rounded, color: Colors.white70),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.08),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF64748B)),
+                        ),
+                      ),
+                      items: ['Mother', 'Father', 'Guardian', 'Other'].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedRelationshipType = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Link Co-Parent Field
+                    TextFormField(
+                      controller: _coParentController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: _selectedRelationshipType == 'Father'
+                            ? "Link Mother (Email or Mobile)"
+                            : _selectedRelationshipType == 'Mother'
+                                ? "Link Father (Email or Mobile)"
+                                : "Link Co-Parent (Email or Mobile)",
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        helperText: 'Optional: Links children profiles & tracking network',
+                        helperStyle: const TextStyle(color: Colors.white54, fontSize: 11),
+                        prefixIcon: const Icon(Icons.link_rounded, color: Colors.white70),
+                        errorText: _getFieldError('co_parent_phone_or_email'),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.08),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Color(0xFF64748B)),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
 

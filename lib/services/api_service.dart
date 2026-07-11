@@ -56,6 +56,8 @@ class ApiService {
     required String mobile,
     required String password,
     required String confirmPassword,
+    String? relationshipType,
+    String? coParentPhoneOrEmail,
   }) async {
     try {
       final response = await http.post(
@@ -67,6 +69,8 @@ class ApiService {
           'mobile': mobile,
           'password': password,
           'password_confirmation': confirmPassword,
+          if (relationshipType != null) 'relationship_type': relationshipType,
+          if (coParentPhoneOrEmail != null) 'co_parent_phone_or_email': coParentPhoneOrEmail,
         }),
       );
 
@@ -211,13 +215,14 @@ class ApiService {
       return {'success': true, 'message': 'Logged out locally'};
     }
   }
-
   // Update Profile API request
   static Future<Map<String, dynamic>> updateProfile({
     required String name,
     required String email,
     required String mobile,
     String? profilePhoto,
+    String? relationshipType,
+    String? coParentPhoneOrEmail,
   }) async {
     try {
       final token = await getToken();
@@ -237,9 +242,10 @@ class ApiService {
           'email': email,
           'mobile': mobile,
           if (profilePhoto != null) 'profile_photo': profilePhoto,
+          if (relationshipType != null) 'relationship_type': relationshipType,
+          if (coParentPhoneOrEmail != null) 'co_parent_phone_or_email': coParentPhoneOrEmail,
         }),
       );
-
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
