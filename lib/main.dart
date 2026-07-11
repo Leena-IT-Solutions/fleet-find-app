@@ -649,10 +649,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                   CircleAvatar(
                                     radius: 30,
                                     backgroundColor: theme.colorScheme.primaryContainer,
-                                    backgroundImage: childPhoto != null && childPhoto.isNotEmpty
+                                    backgroundImage: childPhoto != null && childPhoto.isNotEmpty && childPhoto.startsWith('http')
                                         ? NetworkImage(childPhoto)
                                         : null,
-                                    child: childPhoto == null || childPhoto.isEmpty
+                                    child: childPhoto == null || childPhoto.isEmpty || !childPhoto.startsWith('http')
                                         ? Icon(
                                             Icons.face_rounded,
                                             size: 32,
@@ -712,9 +712,37 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                       ],
                                     ),
                                   ),
-                                  Icon(
-                                    Icons.directions_bus_rounded,
-                                    color: theme.colorScheme.primary,
+                                  PopupMenuButton<String>(
+                                    icon: Icon(Icons.more_vert_rounded, color: Colors.grey.shade600),
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        _showEditChildBottomSheet(child);
+                                      } else if (value == 'delete') {
+                                        _showDeleteChildDialog(child);
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: 'edit',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.edit_rounded, size: 20),
+                                            SizedBox(width: 8),
+                                            Text('Edit Profile'),
+                                          ],
+                                        ),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.delete_rounded, color: Colors.red, size: 20),
+                                            SizedBox(width: 8),
+                                            Text('Delete Profile', style: TextStyle(color: Colors.red)),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -755,6 +783,68 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         onSaved: () {
           setState(() {});
         },
+      ),
+    );
+  }
+
+  void _showEditChildBottomSheet(Map<String, dynamic> child) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => _AddChildBottomSheet(
+        child: child,
+        onSaved: () {
+          setState(() {});
+        },
+      ),
+    );
+  }
+
+  void _showDeleteChildDialog(Map<String, dynamic> child) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Child Profile?'),
+        content: Text('Are you sure you want to delete ${child['name']}\'s profile? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final response = await ApiService.deleteChild(child['id']);
+              if (response['success'] == true) {
+                setState(() {});
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(response['message'] ?? 'Profile deleted successfully.'),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(response['message'] ?? 'Failed to delete profile.'),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }
@@ -1231,8 +1321,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       CircleAvatar(
                         radius: 36,
                         backgroundColor: theme.colorScheme.primaryContainer,
-                        backgroundImage: orgLogo != null ? NetworkImage(orgLogo) : null,
-                        child: orgLogo == null
+                        backgroundImage: orgLogo != null && orgLogo.isNotEmpty && orgLogo.startsWith('http') ? NetworkImage(orgLogo) : null,
+                        child: orgLogo == null || orgLogo.isEmpty || !orgLogo.startsWith('http')
                             ? Icon(Icons.business_rounded, size: 36, color: theme.colorScheme.onPrimaryContainer)
                             : null,
                       ),
@@ -1582,8 +1672,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                             leading: CircleAvatar(
                               radius: 20,
                               backgroundColor: theme.colorScheme.primaryContainer,
-                              backgroundImage: logo != null ? NetworkImage(logo) : null,
-                              child: logo == null
+                              backgroundImage: logo != null && logo.isNotEmpty && logo.startsWith('http') ? NetworkImage(logo) : null,
+                              child: logo == null || logo.isEmpty || !logo.startsWith('http')
                                   ? Icon(
                                       Icons.business_rounded,
                                       size: 20,
@@ -1665,8 +1755,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   CircleAvatar(
                     radius: 48,
                     backgroundColor: theme.colorScheme.primaryContainer,
-                    backgroundImage: userPhoto != null ? NetworkImage(userPhoto) : null,
-                    child: userPhoto == null
+                    backgroundImage: userPhoto != null && userPhoto.isNotEmpty && userPhoto.startsWith('http') ? NetworkImage(userPhoto) : null,
+                    child: userPhoto == null || userPhoto.isEmpty || !userPhoto.startsWith('http')
                         ? Text(
                             userName.isNotEmpty ? userName[0] : 'U',
                             style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
@@ -1924,8 +2014,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
               ),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: theme.colorScheme.onPrimary,
-                backgroundImage: userPhoto != null && userPhoto.isNotEmpty ? NetworkImage(userPhoto) : null,
-                child: userPhoto == null || userPhoto.isEmpty
+                backgroundImage: userPhoto != null && userPhoto.isNotEmpty && userPhoto.startsWith('http') ? NetworkImage(userPhoto) : null,
+                child: userPhoto == null || userPhoto.isEmpty || !userPhoto.startsWith('http')
                     ? Text(
                         userName.isNotEmpty ? userName[0] : 'U',
                         style: TextStyle(
@@ -2080,8 +2170,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
 class _AddChildBottomSheet extends StatefulWidget {
   final VoidCallback onSaved;
+  final Map<String, dynamic>? child;
 
-  const _AddChildBottomSheet({Key? key, required this.onSaved}) : super(key: key);
+  const _AddChildBottomSheet({Key? key, required this.onSaved, this.child}) : super(key: key);
 
   @override
   State<_AddChildBottomSheet> createState() => _AddChildBottomSheetState();
@@ -2096,6 +2187,21 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
   String? _imageBase64;
   bool _isSaving = false;
   String _errorMsg = '';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.child != null) {
+      _nameController.text = widget.child!['name'] ?? '';
+      _gender = widget.child!['gender'] ?? 'Male';
+      final dobStr = widget.child!['dob'] as String?;
+      if (dobStr != null && dobStr.isNotEmpty) {
+        try {
+          _selectedDate = DateTime.parse(dobStr);
+        } catch (_) {}
+      }
+    }
+  }
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -2221,12 +2327,20 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
         ? '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}'
         : null;
 
-    final response = await ApiService.addChild(
-      name: _nameController.text.trim(),
-      dob: dobFormatted,
-      gender: _gender,
-      photoBase64: _imageBase64,
-    );
+    final response = widget.child == null
+        ? await ApiService.addChild(
+            name: _nameController.text.trim(),
+            dob: dobFormatted,
+            gender: _gender,
+            photoBase64: _imageBase64,
+          )
+        : await ApiService.updateChild(
+            widget.child!['id'],
+            name: _nameController.text.trim(),
+            dob: dobFormatted,
+            gender: _gender,
+            photoBase64: _imageBase64,
+          );
 
     if (mounted) {
       setState(() {
@@ -2238,7 +2352,7 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(response['message'] ?? 'Child added successfully.'),
+            content: Text(response['message'] ?? 'Child saved successfully.'),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
           ),
@@ -2292,7 +2406,7 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Add Child Profile',
+                widget.child == null ? 'Add Child Profile' : 'Edit Child Profile',
                 style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
@@ -2304,8 +2418,12 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
                     CircleAvatar(
                       radius: 50,
                       backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                      backgroundImage: _imageFile != null ? FileImage(_imageFile!) : null,
-                      child: _imageFile == null
+                      backgroundImage: _imageFile != null
+                          ? FileImage(_imageFile!)
+                          : (widget.child != null && widget.child!['photo'] != null && widget.child!['photo'].toString().isNotEmpty && widget.child!['photo'].toString().startsWith('http'))
+                              ? NetworkImage(widget.child!['photo']) as ImageProvider
+                              : null,
+                      child: _imageFile == null && (widget.child == null || widget.child!['photo'] == null || widget.child!['photo'].toString().isEmpty || !widget.child!['photo'].toString().startsWith('http'))
                           ? Icon(
                               Icons.face_rounded,
                               size: 56,
@@ -2435,9 +2553,9 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text(
-                        'Save Profile',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    : Text(
+                        widget.child == null ? 'Save Profile' : 'Update Profile',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
               ),
             ],
