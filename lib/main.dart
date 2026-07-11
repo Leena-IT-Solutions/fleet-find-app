@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'screens/login_screen.dart';
 import 'services/api_service.dart';
 
@@ -231,109 +233,136 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-  void _showChangePhotoDialog(ThemeData theme) {
-    final customUrlController = TextEditingController();
-    final presets = [
-      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80',
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80',
-      'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&h=150&q=80',
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&h=150&q=80',
-    ];
+  Future<void> _pickAndUploadImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final XFile? file = await picker.pickImage(
+        source: source,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
 
-    String? dialogError;
+      if (file == null) return;
 
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Choose Profile Photo'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (dialogError != null) ...[
-                  Text(dialogError!, style: const TextStyle(color: Colors.red)),
-                  const SizedBox(height: 8),
-                ],
-                const Text('Select a preset avatar:', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: presets.map((url) {
-                    return GestureDetector(
-                      onTap: () async {
-                        final response = await ApiService.updateProfile(
-                          name: _user?['name'] ?? '',
-                          email: _user?['email'] ?? '',
-                          mobile: _user?['mobile'] ?? '',
-                          profilePhoto: url,
-                        );
-                        if (response['success'] == true) {
-                          final freshUser = await ApiService.getUser();
-                          setState(() {
-                            _user = freshUser;
-                          });
-                          if (context.mounted) Navigator.pop(context);
-                        } else {
-                          setDialogState(() {
-                            dialogError = response['message'];
-                          });
-                        }
-                      },
-                      child: CircleAvatar(
-                        radius: 26,
-                        backgroundImage: NetworkImage(url),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 24),
-                const Text('Or paste a custom image URL:', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: customUrlController,
-                  decoration: const InputDecoration(
-                    labelText: 'Image URL',
-                    hintText: 'https://...',
-                  ),
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      final bytes = await file.readAsBytes();
+      final base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+
+      final response = await ApiService.updateProfile(
+        name: _user?['name'] ?? '',
+        email: _user?['email'] ?? '',
+        mobile: _user?['mobile'] ?? '',
+        profilePhoto: base64String,
+      );
+
+      if (mounted) {
+        Navigator.pop(context); // Dismiss loading dialog
+      }
+
+      if (response['success'] == true) {
+        final freshUser = await ApiService.getUser();
+        setState(() {
+          _user = freshUser;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile photo updated successfully')),
+          );
+        }
+      } else {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Error'),
+              content: Text(response['message'] ?? 'Failed to update profile photo'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
                 ),
               ],
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst || route.settings.name == '/home');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking image: $e')),
+        );
+      }
+    }
+  }
+
+  void _showChangePhotoBottomSheet(ThemeData theme) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                final url = customUrlController.text.trim();
-                if (url.isEmpty) {
-                  setDialogState(() {
-                    dialogError = 'Please select a preset or enter a URL.';
-                  });
-                  return;
-                }
-                final response = await ApiService.updateProfile(
-                  name: _user?['name'] ?? '',
-                  email: _user?['email'] ?? '',
-                  mobile: _user?['mobile'] ?? '',
-                  profilePhoto: url,
-                );
-                if (response['success'] == true) {
-                  final freshUser = await ApiService.getUser();
-                  setState(() {
-                    _user = freshUser;
-                  });
-                  if (context.mounted) Navigator.pop(context);
-                } else {
-                  setDialogState(() {
-                    dialogError = response['message'];
-                  });
-                }
+            const SizedBox(height: 16),
+            const Text(
+              'Upload Profile Photo',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.camera_alt_rounded, color: theme.colorScheme.primary),
+              ),
+              title: const Text('Camera', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Take a new photo using device camera'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickAndUploadImage(ImageSource.camera);
               },
-              child: const Text('Save'),
             ),
+            const Divider(height: 1),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.photo_library_rounded, color: theme.colorScheme.primary),
+              ),
+              title: const Text('From Phone', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Choose an existing photo from gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickAndUploadImage(ImageSource.gallery);
+              },
+            ),
+            const SizedBox(height: 12),
           ],
         ),
       ),
@@ -589,7 +618,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       child: IconButton(
                         padding: EdgeInsets.zero,
                         icon: const Icon(Icons.camera_alt_rounded, size: 16, color: Colors.white),
-                        onPressed: () => _showChangePhotoDialog(theme),
+                        onPressed: () => _showChangePhotoBottomSheet(theme),
                       ),
                     ),
                   ),
