@@ -603,60 +603,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         child: ListView(
           padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 100),
           children: [
-            // Location sharing toggle card
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: theme.colorScheme.primary.withOpacity(0.12)),
-              ),
-              color: theme.colorScheme.primary.withOpacity(0.04),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: _isLocationSharingOn ? Colors.green.shade100 : Colors.grey.shade200,
-                      child: Icon(
-                        _isLocationSharingOn ? Icons.location_on_rounded : Icons.location_off_rounded,
-                        color: _isLocationSharingOn ? Colors.green.shade800 : Colors.grey.shade600,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Share My Location',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _isLocationSharingOn
-                                ? 'Broadcasting live location to your group members.'
-                                : 'Location sharing is turned off.',
-                            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Switch(
-                      value: _isLocationSharingOn,
-                      onChanged: _toggleLocationSharing,
-                      activeColor: Colors.green.shade700,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
                   'My Transit Groups',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 if (!_isGroupsLoading)
                   IconButton(
@@ -665,7 +617,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             if (_isGroupsLoading)
               const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
             else if (_groupsError != null)
@@ -708,6 +660,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                 final name = group['name'] ?? 'Unnamed Group';
                 final desc = group['description'] ?? 'No description provided.';
                 final membersCount = group['members_count'] ?? 0;
+                final isSharing = group['user_sharing_enabled'] == true;
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -718,7 +671,27 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
                       child: Icon(Icons.group_rounded, color: theme.colorScheme.primary),
                     ),
-                    title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    title: Row(
+                      children: [
+                        Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isSharing ? Colors.green.shade50 : Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            isSharing ? 'Sharing' : 'Off',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: isSharing ? Colors.green.shade800 : Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                     subtitle: Text(
                       '$membersCount member${membersCount == 1 ? "" : "s"} • $desc',
                       maxLines: 1,

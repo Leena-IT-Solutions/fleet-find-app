@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../services/api_service.dart';
+import '../services/location_service.dart';
 import 'add_member_screen.dart';
 
 class GroupDetailScreen extends StatefulWidget {
@@ -33,6 +34,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
 
   // Track location update interval from setting
   int _refreshIntervalSeconds = 10;
+  Map<String, dynamic>? _currentUser;
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
     _mapController = MapController();
     _fetchDetails();
     _loadIntervalAndSetupTimer();
+    _loadCurrentUser();
   }
 
   @override
@@ -65,6 +68,62 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
         _fetchDetails(silent: true);
       }
     });
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final user = await ApiService.getUser();
+    if (mounted) {
+      setState(() {
+        _currentUser = user;
+      });
+    }
+  }
+
+  bool get _isSharingLocationWithThisGroup {
+    if (_currentUser == null || _members.isEmpty) return false;
+    final me = _members.firstWhere(
+      (m) => m['id'] == _currentUser!['id'],
+      orElse: () => null,
+    );
+    return me?['location_sharing_enabled'] == true;
+  }
+
+  Future<void> _toggleGroupSharing(bool val) async {
+    if (val) {
+      final success = await LocationService().startTracking();
+      if (!success) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not request location permission. Please enable GPS.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+    }
+
+    final res = await ApiService.toggleGroupLocationSharing(widget.groupId, val);
+
+    if (mounted) {
+      if (res['success'] == true) {
+        await _fetchDetails(silent: true);
+        
+        // Update background service state based on all groups
+        final groupsRes = await ApiService.getGroups();
+        if (groupsRes['success'] == true && groupsRes['groups'] != null) {
+          await LocationService().updateTrackingStateBasedOnGroups(groupsRes['groups']);
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res['message'] ?? 'Failed to update sharing setting.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _fetchDetails({bool silent = false}) async {
@@ -190,6 +249,58 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
     _mapController?.move(LatLng(lat, lng), 15.0);
   }
 
+  Widget _buildSharingToggleCard(ThemeData theme) {
+    final isSharing = _isSharingLocationWithThisGroup;
+    return Container(
+      color: theme.colorScheme.primary.withOpacity(0.04),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: theme.colorScheme.primary.withOpacity(0.1)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: isSharing ? Colors.green.shade100 : Colors.grey.shade200,
+                child: Icon(
+                  isSharing ? Icons.location_on_rounded : Icons.location_off_rounded,
+                  size: 20,
+                  color: isSharing ? Colors.green.shade800 : Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Share Location with this Group',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    Text(
+                      isSharing ? 'Other members can see your live position.' : 'Your location is hidden from this group.',
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: isSharing,
+                onChanged: _toggleGroupSharing,
+                activeColor: Colors.green.shade700,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -265,11 +376,18 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
                     ),
                   ),
                 )
-              : TabBarView(
-                  controller: _tabController,
+              : Column(
                   children: [
-                    _buildMembersTab(theme, isAdmin),
-                    _buildMapTab(theme),
+                    _buildSharingToggleCard(theme),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildMembersTab(theme, isAdmin),
+                          _buildMapTab(theme),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
     );

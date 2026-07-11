@@ -17,9 +17,6 @@ class LocationService {
 
   // Initialize service, fetch interval, and auto-resume if configured
   Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    _isTracking = prefs.getBool('location_sharing_on') ?? false;
-
     // Fetch update interval from settings
     try {
       final res = await ApiService.getLocationInterval();
@@ -30,8 +27,34 @@ class LocationService {
       // Fallback to default 10 seconds
     }
 
-    if (_isTracking) {
-      await startTracking();
+    // Check if user is sharing with any group on start
+    try {
+      final res = await ApiService.getGroups();
+      if (res['success'] == true && res['groups'] != null) {
+        final groups = res['groups'] as List<dynamic>;
+        await updateTrackingStateBasedOnGroups(groups);
+      }
+    } catch (e) {
+      // If network fails on start, fallback to persisted state
+      final prefs = await SharedPreferences.getInstance();
+      _isTracking = prefs.getBool('location_sharing_on') ?? false;
+      if (_isTracking) {
+        await startTracking();
+      }
+    }
+  }
+
+  // Updates tracking state based on group-specific sharing settings
+  Future<void> updateTrackingStateBasedOnGroups(List<dynamic> groups) async {
+    final anySharing = groups.any((g) => g['user_sharing_enabled'] == true);
+    if (anySharing) {
+      if (!_isTracking) {
+        await startTracking();
+      }
+    } else {
+      if (_isTracking) {
+        await stopTracking();
+      }
     }
   }
 

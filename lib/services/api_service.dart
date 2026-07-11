@@ -815,4 +815,33 @@ class ApiService {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
+
+  // Toggle Group-Specific Location Sharing
+  static Future<Map<String, dynamic>> toggleGroupLocationSharing(int groupId, bool sharingEnabled) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.patch(
+        Uri.parse('$baseUrl/groups/$groupId/location-sharing'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'location_sharing_enabled': sharingEnabled,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'location_sharing_enabled': data['location_sharing_enabled'], 'message': data['message']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to update location sharing'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
 }
