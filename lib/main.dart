@@ -1840,10 +1840,13 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           ),
         ),
         const SizedBox(height: 32),
-        Material(
-          type: MaterialType.card,
-          color: theme.colorScheme.primary.withOpacity(0.02),
-          borderRadius: BorderRadius.circular(16),
+        Card(
+          elevation: 0,
+          color: theme.colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.4)),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -1886,10 +1889,13 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           ),
         ),
         const SizedBox(height: 16),
-        Material(
-          type: MaterialType.card,
-          color: theme.colorScheme.primary.withOpacity(0.02),
-          borderRadius: BorderRadius.circular(16),
+        Card(
+          elevation: 0,
+          color: theme.colorScheme.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.4)),
+          ),
           child: ListTile(
             leading: const Icon(Icons.lock_outline_rounded),
             title: const Text('Change Password', style: TextStyle(fontWeight: FontWeight.bold)),
