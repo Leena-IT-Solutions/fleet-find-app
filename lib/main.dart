@@ -672,7 +672,17 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                         const SizedBox(height: 6),
                                         Row(
                                           children: [
-                                            if (gender != null && gender.isNotEmpty) ...[
+                                            if (ageInfo.isNotEmpty) ...[
+                                              Text(
+                                                ageInfo,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: Colors.grey.shade600,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                            ],
+                                            if (gender != null && gender.isNotEmpty)
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                                 decoration: BoxDecoration(
@@ -686,16 +696,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                                     color: theme.colorScheme.primary,
                                                     fontWeight: FontWeight.bold,
                                                   ),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                            ],
-                                            if (ageInfo.isNotEmpty)
-                                              Text(
-                                                ageInfo,
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  color: Colors.grey.shade600,
                                                 ),
                                               ),
                                           ],
