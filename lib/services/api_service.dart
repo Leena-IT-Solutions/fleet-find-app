@@ -334,16 +334,19 @@ class ApiService {
     }
   }
 
-  // Get Organization details API request
-  static Future<Map<String, dynamic>> getOrganization() async {
+  static Future<Map<String, dynamic>> getOrganization({int? organizationId}) async {
     try {
       final token = await getToken();
       if (token == null) {
         return {'success': false, 'message': 'No authentication token found'};
       }
 
+      final url = organizationId != null
+          ? '$baseUrl/organization?organization_id=$organizationId'
+          : '$baseUrl/organization';
+
       final response = await http.get(
-        Uri.parse('$baseUrl/organization'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -354,7 +357,11 @@ class ApiService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        return {'success': true, 'organization': data['organization']};
+        return {
+          'success': true,
+          'organization': data['organization'],
+          'organizations': data['organizations']
+        };
       } else {
         return {'success': false, 'message': data['message'] ?? 'Failed to load organization'};
       }

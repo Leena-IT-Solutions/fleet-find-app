@@ -62,6 +62,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   List<dynamic> _searchResults = [];
   bool _isSearching = false;
   String _searchError = '';
+  int? _selectedOrganizationId;
 
   @override
   void initState() {
@@ -586,7 +587,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   Widget _buildOrganizationPage() {
     final theme = Theme.of(context);
     return FutureBuilder<Map<String, dynamic>>(
-      future: ApiService.getOrganization(),
+      future: ApiService.getOrganization(organizationId: _selectedOrganizationId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -639,12 +640,52 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         final vehicles = (org['vehicles'] as List?) ?? [];
         final drivers = (org['drivers'] as List?) ?? [];
         final attendants = (org['attendants'] as List?) ?? [];
+        final allOrgs = (snapshot.data!['organizations'] as List?) ?? [];
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (allOrgs.length > 1) ...[
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int>(
+                        value: _selectedOrganizationId ?? org['id'],
+                        icon: Icon(Icons.keyboard_arrow_down_rounded, color: theme.colorScheme.primary),
+                        isExpanded: true,
+                        dropdownColor: theme.colorScheme.surface,
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        items: allOrgs.map<DropdownMenuItem<int>>((dynamic o) {
+                          return DropdownMenuItem<int>(
+                            value: o['id'] as int,
+                            child: Text(o['name'] ?? 'N/A'),
+                          );
+                        }).toList(),
+                        onChanged: (int? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _selectedOrganizationId = newValue;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
               // Organization Header Card
               Card(
                 elevation: 0,
