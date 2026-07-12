@@ -184,11 +184,11 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   }
 
   Future<void> _loadUser() async {
-    final user = await ApiService.getUser();
-    if (user != null) {
+    final cachedUser = await ApiService.getUser();
+    if (cachedUser != null) {
       setState(() {
-        _user = user;
-        final roles = user['roles'] != null ? List<String>.from(user['roles']) : <String>[];
+        _user = cachedUser;
+        final roles = cachedUser['roles'] != null ? List<String>.from(cachedUser['roles']) : <String>[];
         if (roles.contains('Driver')) {
           _currentIndex = 6;
         } else if (roles.contains('Attendant')) {
@@ -197,6 +197,26 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           _currentIndex = 3;
         }
       });
+    }
+
+    try {
+      final response = await ApiService.fetchFreshUser();
+      if (response['success'] == true && response['user'] != null) {
+        final freshUser = response['user'] as Map<String, dynamic>;
+        setState(() {
+          _user = freshUser;
+          final roles = freshUser['roles'] != null ? List<String>.from(freshUser['roles']) : <String>[];
+          if (roles.contains('Driver')) {
+            _currentIndex = 6;
+          } else if (roles.contains('Attendant')) {
+            _currentIndex = 7;
+          } else if (roles.contains('Organization')) {
+            _currentIndex = 3;
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading fresh user details: $e');
     }
   }
 

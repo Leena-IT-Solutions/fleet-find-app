@@ -215,6 +215,38 @@ class ApiService {
       return {'success': true, 'message': 'Logged out locally'};
     }
   }
+
+  // Fetch fresh user profile from the server
+  static Future<Map<String, dynamic>> fetchFreshUser() async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'No auth token found'};
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/user'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        final userData = Map<String, dynamic>.from(data['user']);
+        await saveUser(userData);
+        return {'success': true, 'user': userData};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to fetch user profile'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   // Update Profile API request
   static Future<Map<String, dynamic>> updateProfile({
     required String name,
