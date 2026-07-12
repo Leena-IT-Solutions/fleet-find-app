@@ -1033,38 +1033,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                       ],
                                     ),
                                   ),
-                                  PopupMenuButton<String>(
-                                    icon: Icon(Icons.more_vert_rounded, color: Colors.grey.shade600),
-                                    onSelected: (value) {
-                                      if (value == 'edit') {
-                                        _showEditChildBottomSheet(child);
-                                      } else if (value == 'delete') {
-                                        _showDeleteChildDialog(child);
-                                      }
-                                    },
-                                    itemBuilder: (context) => [
-                                      const PopupMenuItem(
-                                        value: 'edit',
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.edit_rounded, size: 20),
-                                            SizedBox(width: 8),
-                                            Text('Edit Profile'),
-                                          ],
-                                        ),
-                                      ),
-                                      const PopupMenuItem(
-                                        value: 'delete',
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.delete_rounded, color: Colors.red, size: 20),
-                                            SizedBox(width: 8),
-                                            Text('Delete Profile', style: TextStyle(color: Colors.red)),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                  Icon(Icons.chevron_right_rounded, color: Colors.grey.shade600),
                                 ],
                               ),
                             ),
