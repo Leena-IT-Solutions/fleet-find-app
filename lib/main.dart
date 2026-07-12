@@ -2905,38 +2905,7 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
-              // Date of birth DatePicker trigger
-              InkWell(
-                onTap: _selectDate,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade400),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.calendar_today_rounded, color: Colors.grey.shade600),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _selectedDate == null
-                              ? 'Date of Birth'
-                              : '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: _selectedDate == null ? Colors.grey.shade600 : Colors.black87,
-                          ),
-                        ),
-                      ),
-                      Icon(Icons.chevron_right_rounded, color: Colors.grey.shade600),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
+
               // Gender chips
               Text(
                 'Gender',
