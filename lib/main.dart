@@ -188,6 +188,14 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     if (user != null) {
       setState(() {
         _user = user;
+        final roles = user['roles'] != null ? List<String>.from(user['roles']) : <String>[];
+        if (roles.contains('Driver')) {
+          _currentIndex = 6;
+        } else if (roles.contains('Attendant')) {
+          _currentIndex = 7;
+        } else if (roles.contains('Organization')) {
+          _currentIndex = 3;
+        }
       });
     }
   }
@@ -2509,6 +2517,14 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     final userEmail = _user != null ? _user!['email'] ?? '' : '';
     final userPhoto = _user != null ? _user!['profile_photo'] as String? : null;
 
+    final roles = _user != null && _user!['roles'] != null
+        ? List<String>.from(_user!['roles'])
+        : <String>[];
+
+    final isDriver = roles.contains('Driver');
+    final isAttendant = roles.contains('Attendant');
+    final isOrganization = roles.contains('Organization');
+
     Widget activeBody;
     switch (_currentIndex) {
       case 0:
@@ -2602,48 +2618,53 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   children: [
-                    _buildDrawerItem(
-                      index: 2,
-                      icon: Icons.home_rounded,
-                      label: 'Home',
-                      theme: theme,
-                    ),
-                    _buildDrawerItem(
-                      index: 1,
-                      icon: Icons.supervisor_account_rounded,
-                      label: 'Parent',
-                      theme: theme,
-                    ),
-                    _buildDrawerItem(
-                      index: 0,
-                      icon: Icons.group_rounded,
-                      label: 'Group',
-                      theme: theme,
-                    ),
-                    _buildDrawerItem(
-                      index: 3,
-                      icon: Icons.business_rounded,
-                      label: 'Organization',
-                      theme: theme,
-                    ),
-                    _buildDrawerItem(
-                      index: 6,
-                      icon: Icons.badge_rounded,
-                      label: 'Driver',
-                      theme: theme,
-                    ),
-                    _buildDrawerItem(
-                      index: 7,
-                      icon: Icons.assignment_ind_rounded,
-                      label: 'Attendant',
-                      theme: theme,
-                    ),
-                    _buildDrawerItem(
-                      index: 5,
-                      icon: Icons.search_rounded,
-                      label: 'Search',
-                      theme: theme,
-                    ),
+                    if (isDriver) ...[
+                      _buildDrawerItem(
+                        index: 6,
+                        icon: Icons.badge_rounded,
+                        label: 'Driver Dashboard',
+                        theme: theme,
+                      ),
+                    ] else if (isAttendant) ...[
+                      _buildDrawerItem(
+                        index: 7,
+                        icon: Icons.assignment_ind_rounded,
+                        label: 'Attendant Dashboard',
+                        theme: theme,
+                      ),
+                    ] else if (isOrganization) ...[
+                      _buildDrawerItem(
+                        index: 3,
+                        icon: Icons.business_rounded,
+                        label: 'Organization Board',
+                        theme: theme,
+                      ),
+                    ] else ...[
+                      _buildDrawerItem(
+                        index: 2,
+                        icon: Icons.home_rounded,
+                        label: 'Home',
+                        theme: theme,
+                      ),
+                      _buildDrawerItem(
+                        index: 1,
+                        icon: Icons.supervisor_account_rounded,
+                        label: 'Parent',
+                        theme: theme,
+                      ),
+                      _buildDrawerItem(
+                        index: 0,
+                        icon: Icons.group_rounded,
+                        label: 'Group',
+                        theme: theme,
+                      ),
+                      _buildDrawerItem(
+                        index: 5,
+                        icon: Icons.search_rounded,
+                        label: 'Search',
+                        theme: theme,
+                      ),
+                    ],
                     _buildDrawerItem(
                       index: 4,
                       icon: Icons.person_rounded,
@@ -2668,63 +2689,67 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         ),
       ),
       body: activeBody,
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8.0,
-        child: SizedBox(
-          height: 60.0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildTabItem(index: 1, icon: Icons.supervisor_account_rounded, label: 'Parent'),
-              _buildTabItem(index: 0, icon: Icons.group_rounded, label: 'Group'),
-              const SizedBox(width: 48), // Spacer for center FAB
-              _buildTabItem(index: 5, icon: Icons.search_rounded, label: 'Search'),
-              _buildTabItem(index: 4, icon: Icons.person_rounded, label: 'Profile'),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: Container(
-        height: 68,
-        width: 68,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: theme.colorScheme.primary.withOpacity(0.2),
-            width: 3,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: FloatingActionButton(
-          heroTag: 'fab_main_center_docked',
-          elevation: 0,
-          highlightElevation: 0,
-          shape: const CircleBorder(),
-          backgroundColor: theme.colorScheme.surface,
-          onPressed: () {
-            setState(() {
-              _currentIndex = 2; // Home
-            });
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(6.0),
-            child: RotationTransition(
-              turns: _rotationController,
-              child: Image.asset(
-                'assets/logo.png',
-                fit: BoxFit.contain,
+      bottomNavigationBar: (isDriver || isAttendant || isOrganization)
+          ? null
+          : BottomAppBar(
+              shape: const CircularNotchedRectangle(),
+              notchMargin: 8.0,
+              child: SizedBox(
+                height: 60.0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildTabItem(index: 1, icon: Icons.supervisor_account_rounded, label: 'Parent'),
+                    _buildTabItem(index: 0, icon: Icons.group_rounded, label: 'Group'),
+                    const SizedBox(width: 48), // Spacer for center FAB
+                    _buildTabItem(index: 5, icon: Icons.search_rounded, label: 'Search'),
+                    _buildTabItem(index: 4, icon: Icons.person_rounded, label: 'Profile'),
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
-      ),
+      floatingActionButton: (isDriver || isAttendant || isOrganization)
+          ? null
+          : Container(
+              height: 68,
+              width: 68,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: theme.colorScheme.primary.withOpacity(0.2),
+                  width: 3,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: FloatingActionButton(
+                heroTag: 'fab_main_center_docked',
+                elevation: 0,
+                highlightElevation: 0,
+                shape: const CircleBorder(),
+                backgroundColor: theme.colorScheme.surface,
+                onPressed: () {
+                  setState(() {
+                    _currentIndex = 2; // Home
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(6.0),
+                  child: RotationTransition(
+                    turns: _rotationController,
+                    child: Image.asset(
+                      'assets/logo.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ),
+            ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
