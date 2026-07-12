@@ -15,19 +15,9 @@ class OrganizationProfileScreen extends StatelessWidget {
     final String number = org['number'] ?? 'N/A';
     final String address = org['address'] ?? 'N/A';
     final String? logo = org['logo'] as String?;
-    final String? shareLocationBy = org['share_location_by'];
-    final dynamic enrollmentEndDate = org['enrollment_end_date'];
 
-    final bool displayDriverPhone = org['display_driver_phone'] == true || org['display_driver_phone'] == 1;
-    final bool displayAttendantPhone = org['display_attendant_phone'] == true || org['display_attendant_phone'] == 1;
-
-    String formattedDate = 'N/A';
-    if (enrollmentEndDate != null) {
-      try {
-        DateTime parsedDate = DateTime.parse(enrollmentEndDate.toString());
-        formattedDate = DateFormat('MMMM dd, yyyy').format(parsedDate);
-      } catch (_) {}
-    }
+    final bool showEmail = org['show_email'] == true || org['show_email'] == 1 || org['show_email'] == null;
+    final bool showPhone = org['show_phone'] == true || org['show_phone'] == 1 || org['show_phone'] == null;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -160,87 +150,24 @@ class OrganizationProfileScreen extends StatelessWidget {
                             title: 'Address',
                             value: address,
                           ),
-                          const Divider(height: 24),
-                          _buildDetailRow(
-                            icon: Icons.email_rounded,
-                            iconColor: Colors.blue.shade600,
-                            title: 'Email Address',
-                            value: email,
-                          ),
-                          const Divider(height: 24),
-                          _buildDetailRow(
-                            icon: Icons.phone_rounded,
-                            iconColor: Colors.green.shade600,
-                            title: 'Phone Number',
-                            value: number,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Settings & Enrollment Info Card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8, bottom: 8),
-                    child: Text(
-                      'PREFERENCES & SUBSCRIPTION',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
-                  Card(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: Colors.grey.shade200),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          _buildSettingRow(
-                            icon: Icons.phone_in_talk_rounded,
-                            iconColor: Colors.indigo.shade600,
-                            title: 'Display Driver Phone',
-                            isEnabled: displayDriverPhone,
-                          ),
-                          const Divider(height: 24),
-                          _buildSettingRow(
-                            icon: Icons.contact_phone_rounded,
-                            iconColor: Colors.purple.shade600,
-                            title: 'Display Attendant Phone',
-                            isEnabled: displayAttendantPhone,
-                          ),
-                          if (shareLocationBy != null && shareLocationBy.isNotEmpty) ...[
+                          if (showEmail) ...[
                             const Divider(height: 24),
                             _buildDetailRow(
-                              icon: Icons.share_location_rounded,
-                              iconColor: Colors.teal.shade600,
-                              title: 'Share Location By',
-                              value: shareLocationBy,
+                              icon: Icons.email_rounded,
+                              iconColor: Colors.blue.shade600,
+                              title: 'Email Address',
+                              value: email,
                             ),
                           ],
-                          const Divider(height: 24),
-                          _buildDetailRow(
-                            icon: Icons.calendar_today_rounded,
-                            iconColor: Colors.orange.shade600,
-                            title: 'Enrollment End Date',
-                            value: formattedDate,
-                          ),
+                          if (showPhone) ...[
+                            const Divider(height: 24),
+                            _buildDetailRow(
+                              icon: Icons.phone_rounded,
+                              iconColor: Colors.green.shade600,
+                              title: 'Phone Number',
+                              value: number,
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -296,52 +223,6 @@ class OrganizationProfileScreen extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSettingRow({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required bool isEnabled,
-  }) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.08),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: iconColor, size: 20),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: isEnabled ? const Color(0xFFE5F7F6) : const Color(0xFFFDE8E8),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            isEnabled ? 'Enabled' : 'Disabled',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: isEnabled ? const Color(0xFF0369A1) : const Color(0xFFE02424),
-            ),
           ),
         ),
       ],
