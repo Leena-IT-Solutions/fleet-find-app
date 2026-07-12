@@ -372,8 +372,7 @@ class ApiService {
     }
   }
 
-  // Search Organizations API request
-  static Future<Map<String, dynamic>> searchOrganizations(String query) async {
+  static Future<Map<String, dynamic>> searchOrganizations(String query, {int page = 1}) async {
     try {
       final token = await getToken();
       if (token == null) {
@@ -381,7 +380,7 @@ class ApiService {
       }
 
       final response = await http.get(
-        Uri.parse('$baseUrl/organizations/search?q=${Uri.encodeComponent(query)}'),
+        Uri.parse('$baseUrl/organizations/search?q=${Uri.encodeComponent(query)}&page=$page'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -392,7 +391,7 @@ class ApiService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        return {'success': true, 'organizations': data['organizations']};
+        return data;
       } else {
         return {'success': false, 'message': data['message'] ?? 'Failed to search organizations'};
       }

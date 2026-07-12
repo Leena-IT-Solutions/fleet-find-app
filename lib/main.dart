@@ -6,6 +6,7 @@ import 'screens/login_screen.dart';
 import 'screens/create_group_screen.dart';
 import 'screens/group_detail_screen.dart';
 import 'screens/child_detail_screen.dart';
+import 'screens/organization_profile_screen.dart';
 import 'services/api_service.dart';
 import 'services/location_service.dart';
 
@@ -49,6 +50,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const MyHomePage(title: 'FleetFind Operations Board'),
         '/child-detail': (context) => const ChildDetailScreen(),
+        '/organization-profile': (context) => const OrganizationProfileScreen(),
       },
     );
   }
@@ -75,6 +77,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   String _searchError = '';
   int? _selectedOrganizationId;
 
+  // Search Pagination State
+  int _searchPage = 1;
+  bool _searchHasMore = true;
+  bool _isLoadingMore = false;
+  final ScrollController _searchScrollController = ScrollController();
+
   // Group Feature State Variables
   List<dynamic> _groups = [];
   bool _isGroupsLoading = true;
@@ -89,6 +97,11 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       duration: const Duration(seconds: 3),
       vsync: this,
     )..repeat();
+    _searchScrollController.addListener(() {
+      if (_searchScrollController.position.pixels >= _searchScrollController.position.maxScrollExtent - 200) {
+        _loadMoreOrganizations();
+      }
+    });
     _performSearch('');
     _loadLocationSharingState();
     _fetchGroups();
@@ -98,6 +111,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   void dispose() {
     _rotationController.dispose();
     _searchQueryController.dispose();
+    _searchScrollController.dispose();
     super.dispose();
   }
 
@@ -105,12 +119,21 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     setState(() {
       _isSearching = true;
       _searchError = '';
+      _searchPage = 1;
+      _searchHasMore = true;
+      _searchResults = [];
     });
     try {
-      final res = await ApiService.searchOrganizations(query);
+      final res = await ApiService.searchOrganizations(query, page: 1);
       if (res['success'] == true) {
         setState(() {
           _searchResults = res['organizations'] ?? [];
+          final meta = res['meta'];
+          if (meta != null) {
+            _searchHasMore = meta['has_more'] == true;
+          } else {
+            _searchHasMore = false;
+          }
         });
       } else {
         setState(() {
@@ -124,6 +147,38 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     } finally {
       setState(() {
         _isSearching = false;
+      });
+    }
+  }
+
+  void _loadMoreOrganizations() async {
+    if (_isSearching || _isLoadingMore || !_searchHasMore) return;
+
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      final nextPage = _searchPage + 1;
+      final res = await ApiService.searchOrganizations(_searchQueryController.text, page: nextPage);
+      if (res['success'] == true) {
+        setState(() {
+          final newItems = res['organizations'] ?? [];
+          _searchResults.addAll(newItems);
+          _searchPage = nextPage;
+          final meta = res['meta'];
+          if (meta != null) {
+            _searchHasMore = meta['has_more'] == true;
+          } else {
+            _searchHasMore = false;
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading more organizations: $e');
+    } finally {
+      setState(() {
+        _isLoadingMore = false;
       });
     }
   }
@@ -1970,14 +2025,22 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       ),
                     )
                   : ListView.builder(
+                      controller: _searchScrollController,
                       padding: const EdgeInsets.only(left: 24, right: 24, bottom: 100),
-                      itemCount: _searchResults.length,
+                      itemCount: _searchResults.length + (_isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
+                        if (index == _searchResults.length) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16.0),
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+
                         final org = _searchResults[index];
                         final name = org['name'] ?? 'N/A';
                         final email = org['email'] ?? 'N/A';
-                        final phone = org['number'] ?? 'N/A';
-                        final address = org['address'] ?? 'N/A';
                         final logo = org['logo'] as String?;
 
                         return Card(
@@ -1989,62 +2052,44 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                               color: theme.colorScheme.outlineVariant.withOpacity(0.4),
                             ),
                           ),
-                          child: ExpansionTile(
-                            leading: CircleAvatar(
-                              radius: 20,
-                              backgroundColor: theme.colorScheme.primaryContainer,
-                              backgroundImage: logo != null && logo.isNotEmpty && logo.startsWith('http') ? NetworkImage(logo) : null,
-                              child: logo == null || logo.isEmpty || !logo.startsWith('http')
-                                  ? Icon(
-                                      Icons.business_rounded,
-                                      size: 20,
-                                      color: theme.colorScheme.onPrimaryContainer,
-                                    )
-                                  : null,
-                            ),
-                            title: Text(
-                              name,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(
-                              email,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
-                            ),
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Divider(),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Icon(Icons.phone_rounded, size: 16, color: theme.colorScheme.primary),
-                                        const SizedBox(width: 8),
-                                        Text(phone, style: const TextStyle(fontSize: 13)),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Icon(Icons.location_on_rounded, size: 16, color: theme.colorScheme.primary),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            address,
-                                            style: const TextStyle(fontSize: 13),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/organization-profile',
+                                arguments: org,
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(16),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              leading: CircleAvatar(
+                                radius: 20,
+                                backgroundColor: theme.colorScheme.primaryContainer,
+                                backgroundImage: logo != null && logo.isNotEmpty && logo.startsWith('http') ? NetworkImage(logo) : null,
+                                child: logo == null || logo.isEmpty || !logo.startsWith('http')
+                                    ? Icon(
+                                        Icons.business_rounded,
+                                        size: 20,
+                                        color: theme.colorScheme.onPrimaryContainer,
+                                      )
+                                    : null,
                               ),
-                            ],
+                              title: Text(
+                                name,
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                email,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                              trailing: Icon(
+                                Icons.chevron_right_rounded,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
                           ),
                         );
                       },
