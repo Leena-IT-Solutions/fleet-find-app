@@ -862,7 +862,7 @@ class _AddRelationshipBottomSheetState extends State<_AddRelationshipBottomSheet
                   prefixIcon: const Icon(Icons.people_outline_rounded),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                items: ['Mother', 'Father', 'Guardian', 'Aunt', 'Uncle', 'Other'].map((String value) {
+                items: ['Mother', 'Father', 'Guardian', 'Other'].map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),
@@ -1015,7 +1015,7 @@ class _EditRelationshipBottomSheetState extends State<_EditRelationshipBottomShe
                 prefixIcon: const Icon(Icons.people_outline_rounded),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              items: ['Mother', 'Father', 'Guardian', 'Aunt', 'Uncle', 'Other'].map((String value) {
+              items: ['Mother', 'Father', 'Guardian', 'Other'].map((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
                   child: Text(value),
