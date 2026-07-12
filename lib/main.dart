@@ -2026,7 +2026,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                     )
                   : ListView.builder(
                       controller: _searchScrollController,
-                      padding: const EdgeInsets.only(left: 24, right: 24, bottom: 100),
+                      padding: const EdgeInsets.only(left: 0, right: 0, bottom: 100),
                       itemCount: _searchResults.length + (_isLoadingMore ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (index == _searchResults.length) {
@@ -2040,7 +2040,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
                         final org = _searchResults[index];
                         final name = org['name'] ?? 'N/A';
-                        final email = org['email'] ?? 'N/A';
+                        final address = org['address'] ?? 'N/A';
                         final logo = org['logo'] as String?;
 
                         return Card(
@@ -2080,8 +2080,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                 style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                               subtitle: Text(
-                                email,
-                                maxLines: 1,
+                                address,
+                                maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(fontSize: 12, color: Colors.grey),
                               ),
