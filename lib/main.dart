@@ -7,6 +7,7 @@ import 'screens/create_group_screen.dart';
 import 'screens/group_detail_screen.dart';
 import 'screens/child_detail_screen.dart';
 import 'screens/organization_profile_screen.dart';
+import 'screens/trip_details_screen.dart';
 import 'services/api_service.dart';
 import 'services/location_service.dart';
 
@@ -1662,184 +1663,141 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                         borderRadius: BorderRadius.circular(16),
                         side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.4)),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Trip Info Header Row
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        tripName,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        orgName,
-                                        style: TextStyle(
-                                          color: theme.colorScheme.primary,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Text(
-                                    'Active Route',
-                                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11),
-                                  ),
-                                ),
-                              ],
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TripDetailsScreen(trip: t),
                             ),
-                            const Divider(height: 24),
-
-                            // Vehicle & Crew Info
-                            Row(
-                              children: [
-                                // Vehicle Detail
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.directions_bus_rounded, color: Colors.blue.shade300, size: 20),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Vehicle',
-                                              style: TextStyle(color: Colors.grey, fontSize: 11),
-                                            ),
-                                            Text(
-                                              vehicle != null ? vehicle['registration_number'] ?? 'N/A' : 'N/A',
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Attendant/Assistant Detail
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.support_agent_rounded, color: Colors.teal.shade300, size: 20),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Attendant',
-                                              style: TextStyle(color: Colors.grey, fontSize: 11),
-                                            ),
-                                            Text(
-                                              assistant != null ? assistant['name'] ?? 'N/A' : 'N/A',
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            if (stops.isNotEmpty) ...[
-                              const Divider(height: 24),
-                              const Text(
-                                'Scheduled Stops Timeline',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey),
-                              ),
-                              const SizedBox(height: 12),
-                              // Stops Timeline View
-                              ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: stops.length,
-                                itemBuilder: (context, index) {
-                                  final stop = stops[index];
-                                  final stopName = stop['name'] ?? 'N/A';
-                                  final stopTime = stop['time'] ?? 'N/A';
-                                  final displayTime = stopTime.toString().split(':').take(2).join(':');
-
-                                  return Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      // Timeline Dot & Line
-                                      Column(
-                                        children: [
-                                          Container(
-                                            width: 12,
-                                            height: 12,
-                                            decoration: BoxDecoration(
-                                              color: index == 0 ? theme.colorScheme.primary : theme.colorScheme.secondary,
-                                              shape: BoxShape.circle,
-                                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Trip Info Header Row
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          tripName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 16,
                                           ),
-                                          if (index < stops.length - 1)
-                                            Container(
-                                              width: 2,
-                                              height: 32,
-                                              color: Colors.grey.shade300,
-                                            ),
-                                        ],
-                                      ),
-                                      const SizedBox(width: 16),
-                                      // Stop Details
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(bottom: 8.0),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          orgName,
+                                          style: TextStyle(
+                                            color: theme.colorScheme.primary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Text(
+                                      'Active Route',
+                                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Divider(height: 24),
+
+                              // Vehicle & Crew Info
+                              Row(
+                                children: [
+                                  // Vehicle Detail
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.directions_bus_rounded, color: Colors.blue.shade300, size: 20),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Expanded(
-                                                child: Text(
-                                                  stopName,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
+                                              const Text(
+                                                'Vehicle',
+                                                style: TextStyle(color: Colors.grey, fontSize: 11),
                                               ),
                                               Text(
-                                                displayTime,
-                                                style: TextStyle(
-                                                  color: theme.colorScheme.primary,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 13,
-                                                ),
+                                                vehicle != null ? vehicle['registration_number'] ?? 'N/A' : 'N/A',
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ],
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  );
-                                },
+                                      ],
+                                    ),
+                                  ),
+                                  // Attendant/Assistant Detail
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.support_agent_rounded, color: Colors.teal.shade300, size: 20),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Attendant',
+                                                style: TextStyle(color: Colors.grey, fontSize: 11),
+                                              ),
+                                              Text(
+                                                assistant != null ? assistant['name'] ?? 'N/A' : 'N/A',
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'View stops & children',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    size: 16,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ],
                               ),
                             ],
-                          ],
+                          ),
                         ),
                       ),
                     );
@@ -2089,184 +2047,141 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                         borderRadius: BorderRadius.circular(16),
                         side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.4)),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Trip Info Header Row
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        tripName,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        orgName,
-                                        style: TextStyle(
-                                          color: theme.colorScheme.primary,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Text(
-                                    'Active Route',
-                                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11),
-                                  ),
-                                ),
-                              ],
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TripDetailsScreen(trip: t),
                             ),
-                            const Divider(height: 24),
-
-                            // Vehicle & Crew Info
-                            Row(
-                              children: [
-                                // Vehicle Detail
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.directions_bus_rounded, color: Colors.blue.shade300, size: 20),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Vehicle',
-                                              style: TextStyle(color: Colors.grey, fontSize: 11),
-                                            ),
-                                            Text(
-                                              vehicle != null ? vehicle['registration_number'] ?? 'N/A' : 'N/A',
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Driver Detail
-                                Expanded(
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.badge_rounded, color: Colors.teal.shade300, size: 20),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Driver',
-                                              style: TextStyle(color: Colors.grey, fontSize: 11),
-                                            ),
-                                            Text(
-                                              driver != null ? driver['name'] ?? 'N/A' : 'N/A',
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            if (stops.isNotEmpty) ...[
-                              const Divider(height: 24),
-                              const Text(
-                                'Scheduled Stops Timeline',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey),
-                              ),
-                              const SizedBox(height: 12),
-                              // Stops Timeline View
-                              ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: stops.length,
-                                itemBuilder: (context, index) {
-                                  final stop = stops[index];
-                                  final stopName = stop['name'] ?? 'N/A';
-                                  final stopTime = stop['time'] ?? 'N/A';
-                                  final displayTime = stopTime.toString().split(':').take(2).join(':');
-
-                                  return Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      // Timeline Dot & Line
-                                      Column(
-                                        children: [
-                                          Container(
-                                            width: 12,
-                                            height: 12,
-                                            decoration: BoxDecoration(
-                                              color: index == 0 ? theme.colorScheme.primary : theme.colorScheme.secondary,
-                                              shape: BoxShape.circle,
-                                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Trip Info Header Row
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          tripName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 16,
                                           ),
-                                          if (index < stops.length - 1)
-                                            Container(
-                                              width: 2,
-                                              height: 32,
-                                              color: Colors.grey.shade300,
-                                            ),
-                                        ],
-                                      ),
-                                      const SizedBox(width: 16),
-                                      // Stop Details
-                                      Expanded(
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(bottom: 8.0),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          orgName,
+                                          style: TextStyle(
+                                            color: theme.colorScheme.primary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Text(
+                                      'Active Route',
+                                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Divider(height: 24),
+
+                              // Vehicle & Crew Info
+                              Row(
+                                children: [
+                                  // Vehicle Detail
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.directions_bus_rounded, color: Colors.blue.shade300, size: 20),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Expanded(
-                                                child: Text(
-                                                  stopName,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
+                                              const Text(
+                                                'Vehicle',
+                                                style: TextStyle(color: Colors.grey, fontSize: 11),
                                               ),
                                               Text(
-                                                displayTime,
-                                                style: TextStyle(
-                                                  color: theme.colorScheme.primary,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 13,
-                                                ),
+                                                vehicle != null ? vehicle['registration_number'] ?? 'N/A' : 'N/A',
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ],
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  );
-                                },
+                                      ],
+                                    ),
+                                  ),
+                                  // Driver Detail
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.badge_rounded, color: Colors.teal.shade300, size: 20),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Driver',
+                                                style: TextStyle(color: Colors.grey, fontSize: 11),
+                                              ),
+                                              Text(
+                                                driver != null ? driver['name'] ?? 'N/A' : 'N/A',
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'View stops & children',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.chevron_right_rounded,
+                                    size: 16,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ],
                               ),
                             ],
-                          ],
+                          ),
                         ),
                       ),
                     );
