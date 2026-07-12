@@ -258,7 +258,7 @@ class TripDetailsScreen extends StatelessWidget {
                                       child: Text(
                                         stopName,
                                         style: const TextStyle(
-                                          fontWeight: FontWeight.w850,
+                                          fontWeight: FontWeight.bold,
                                           fontSize: 16,
                                         ),
                                       ),
