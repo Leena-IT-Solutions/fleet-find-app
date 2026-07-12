@@ -589,7 +589,7 @@ class _EditChildBottomSheetState extends State<_EditChildBottomSheet> {
         left: 24,
         right: 24,
         top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
       ),
       child: SingleChildScrollView(
         child: Form(
@@ -783,7 +783,7 @@ class _AddRelationshipBottomSheetState extends State<_AddRelationshipBottomSheet
         left: 24,
         right: 24,
         top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
       ),
       child: SingleChildScrollView(
         child: Form(

@@ -204,7 +204,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
             left: 24,
             right: 24,
             top: 24,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -307,7 +307,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
             left: 24,
             right: 24,
             top: 24,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -547,7 +547,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           left: 24,
           right: 24,
           top: 24,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -2758,7 +2758,7 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
         left: 24,
         right: 24,
         top: 16,
-        bottom: media.viewInsets.bottom + 24,
+        bottom: media.viewInsets.bottom + media.padding.bottom + 24,
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
