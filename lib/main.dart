@@ -686,6 +686,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     final theme = Theme.of(context);
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab_group_page',
         onPressed: () async {
           final created = await Navigator.push(
             context,
@@ -1052,6 +1053,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           final childrenList = (snapshot.data?['children'] as List?) ?? [];
           if (childrenList.isEmpty) return const SizedBox.shrink();
           return FloatingActionButton(
+            heroTag: 'fab_children_tab',
             onPressed: _showAddChildBottomSheet,
             backgroundColor: theme.colorScheme.primary,
             foregroundColor: theme.colorScheme.onPrimary,
@@ -2515,6 +2517,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           ],
         ),
         child: FloatingActionButton(
+          heroTag: 'fab_main_center_docked',
           elevation: 0,
           highlightElevation: 0,
           shape: const CircleBorder(),

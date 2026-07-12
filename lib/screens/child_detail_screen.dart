@@ -172,6 +172,23 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
     );
   }
 
+  void _showEditRelationshipBottomSheet(Map<String, dynamic> relationship) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => _EditRelationshipBottomSheet(
+        childId: _childId!,
+        relationship: relationship,
+        onSaved: () {
+          _fetchDetails();
+        },
+      ),
+    );
+  }
+
   Future<void> _removeRelationship(int userId) async {
     final confirm = await showModalBottomSheet<bool>(
       context: context,
@@ -465,13 +482,22 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                               style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                             ),
                           ),
-                          trailing: relationships.length > 1
-                              ? IconButton(
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, color: Colors.grey),
+                                tooltip: 'Edit relationship',
+                                onPressed: () => _showEditRelationshipBottomSheet(rel),
+                              ),
+                              if (relationships.length > 1)
+                                IconButton(
                                   icon: const Icon(Icons.link_off_rounded, color: Colors.grey),
                                   tooltip: 'Remove relationship',
                                   onPressed: () => _removeRelationship(rel['id']),
-                                )
-                              : null,
+                                ),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -870,6 +896,158 @@ class _AddRelationshipBottomSheetState extends State<_AddRelationshipBottomSheet
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// Edit relationship bottom sheet modal
+class _EditRelationshipBottomSheet extends StatefulWidget {
+  final int childId;
+  final Map<String, dynamic> relationship;
+  final VoidCallback onSaved;
+
+  const _EditRelationshipBottomSheet({
+    required this.childId,
+    required this.relationship,
+    required this.onSaved,
+  });
+
+  @override
+  State<_EditRelationshipBottomSheet> createState() => _EditRelationshipBottomSheetState();
+}
+
+class _EditRelationshipBottomSheetState extends State<_EditRelationshipBottomSheet> {
+  late String _relationshipType;
+  bool _isSaving = false;
+  String _errorMsg = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _relationshipType = widget.relationship['relationship_type'] ?? 'Mother';
+  }
+
+  Future<void> _submit() async {
+    setState(() {
+      _isSaving = true;
+      _errorMsg = '';
+    });
+
+    final String input = widget.relationship['email'] ?? widget.relationship['mobile'] ?? '';
+
+    final res = await ApiService.addChildRelationship(
+      widget.childId,
+      emailOrMobile: input,
+      relationshipType: _relationshipType,
+    );
+
+    if (mounted) {
+      setState(() {
+        _isSaving = false;
+      });
+      if (res['success'] == true) {
+        widget.onSaved();
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Relationship updated successfully')),
+        );
+      } else {
+        setState(() {
+          _errorMsg = res['message'] ?? 'Failed to update relationship';
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final String name = widget.relationship['name'] ?? '';
+    final String contact = widget.relationship['email'] ?? widget.relationship['mobile'] ?? '';
+
+    return Container(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Edit Relationship',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            if (_errorMsg.isNotEmpty) ...[
+              Text(_errorMsg, style: const TextStyle(color: Colors.red), textAlign: TextAlign.center),
+              const SizedBox(height: 12),
+            ],
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(contact),
+              leading: CircleAvatar(
+                child: Text(name.isNotEmpty ? name[0] : 'P'),
+              ),
+            ),
+            const SizedBox(height: 20),
+            DropdownButtonFormField<String>(
+              value: _relationshipType,
+              decoration: InputDecoration(
+                labelText: 'Relationship to Child',
+                prefixIcon: const Icon(Icons.people_outline_rounded),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              items: ['Mother', 'Father', 'Guardian', 'Aunt', 'Uncle', 'Other'].map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  if (value != null) {
+                    _relationshipType = value;
+                  }
+                });
+              },
+            ),
+            const SizedBox(height: 28),
+            ElevatedButton(
+              onPressed: _isSaving ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text(
+                      'Update Relationship',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+            ),
+          ],
         ),
       ),
     );
