@@ -941,4 +941,80 @@ class ApiService {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
+
+  // Get subscription enrollment options (children, grades, routes, stops)
+  static Future<Map<String, dynamic>> getSubscriptionEnrollmentOptions(int planId) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'No authentication token found'};
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/subscription-plans/$planId/enrollment-options'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'children': data['children'] ?? [],
+          'grades': data['grades'] ?? [],
+          'routes': data['routes'] ?? [],
+        };
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to load options'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Submit subscription enrollment request
+  static Future<Map<String, dynamic>> enrollSubscription(int planId, {
+    required int childId,
+    required int gradeId,
+    required int divisionId,
+    required int routeId,
+    required int pickupStopId,
+    required int dropStopId,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'No authentication token found'};
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/subscription-plans/$planId/enroll'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'child_id': childId,
+          'grade_id': gradeId,
+          'division_id': divisionId,
+          'route_id': routeId,
+          'pickup_stop_id': pickupStopId,
+          'drop_stop_id': dropStopId,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message'] ?? 'Enrolled successfully'};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to enroll'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/api_service.dart';
 
 class OrganizationProfileScreen extends StatelessWidget {
   const OrganizationProfileScreen({super.key});
@@ -24,6 +25,15 @@ class OrganizationProfileScreen extends StatelessWidget {
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     }
+  }
+
+  void _showEnrollmentBottomSheet(BuildContext context, Map<String, dynamic> plan) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => EnrollmentBottomSheet(plan: plan),
+    );
   }
 
   @override
@@ -99,10 +109,10 @@ class OrganizationProfileScreen extends StatelessWidget {
                               logo,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) => Icon(
-                                Icons.business_rounded,
-                                size: 45,
-                                color: theme.colorScheme.primary,
-                              ),
+                                  Icons.business_rounded,
+                                  size: 45,
+                                  color: theme.colorScheme.primary,
+                                ),
                             )
                           : Icon(
                               Icons.business_rounded,
@@ -259,17 +269,37 @@ class OrganizationProfileScreen extends StatelessWidget {
                       String regEnd = 'N/A';
                       String validTill = 'N/A';
 
+                      DateTime? regStartDate;
+                      DateTime? regEndDate;
+
                       try {
                         if (plan['registration_start_date'] != null) {
-                          regStart = DateFormat('MMM dd, yyyy').format(DateTime.parse(plan['registration_start_date'].toString()));
+                          regStartDate = DateTime.parse(plan['registration_start_date'].toString());
+                          regStart = DateFormat('MMM dd, yyyy').format(regStartDate);
                         }
                         if (plan['registration_end_date'] != null) {
-                          regEnd = DateFormat('MMM dd, yyyy').format(DateTime.parse(plan['registration_end_date'].toString()));
+                          regEndDate = DateTime.parse(plan['registration_end_date'].toString());
+                          regEnd = DateFormat('MMM dd, yyyy').format(regEndDate);
                         }
                         if (plan['valid_till'] != null) {
                           validTill = DateFormat('MMM dd, yyyy').format(DateTime.parse(plan['valid_till'].toString()));
                         }
                       } catch (_) {}
+
+                      // Compute active window status
+                      final now = DateTime.now();
+                      final today = DateTime(now.year, now.month, now.day);
+                      
+                      String buttonText = 'Enroll Now';
+                      bool isButtonEnabled = true;
+
+                      if (regStartDate != null && today.isBefore(DateTime(regStartDate.year, regStartDate.month, regStartDate.day))) {
+                        buttonText = 'Opens on ${DateFormat('MMM dd').format(regStartDate)}';
+                        isButtonEnabled = false;
+                      } else if (regEndDate != null && today.isAfter(DateTime(regEndDate.year, regEndDate.month, regEndDate.day))) {
+                        buttonText = 'Registration Closed';
+                        isButtonEnabled = false;
+                      }
 
                       return Card(
                         elevation: 0,
@@ -337,6 +367,30 @@ class OrganizationProfileScreen extends StatelessWidget {
                                     ),
                                   ),
                                 ],
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: isButtonEnabled
+                                      ? () => _showEnrollmentBottomSheet(context, plan)
+                                      : null,
+                                  style: ElevatedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    elevation: 0,
+                                    backgroundColor: theme.colorScheme.primary,
+                                    foregroundColor: Colors.white,
+                                    disabledBackgroundColor: Colors.grey.shade200,
+                                    disabledForegroundColor: Colors.grey.shade500,
+                                  ),
+                                  child: Text(
+                                    buttonText,
+                                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -432,6 +486,374 @@ class OrganizationProfileScreen extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class EnrollmentBottomSheet extends StatefulWidget {
+  final Map<String, dynamic> plan;
+
+  const EnrollmentBottomSheet({super.key, required this.plan});
+
+  @override
+  State<EnrollmentBottomSheet> createState() => _EnrollmentBottomSheetState();
+}
+
+class _EnrollmentBottomSheetState extends State<EnrollmentBottomSheet> {
+  final _formKey = GlobalKey<FormState>();
+
+  bool _isLoading = true;
+  bool _isSaving = false;
+  String _errorMsg = '';
+
+  List<dynamic> _children = [];
+  List<dynamic> _grades = [];
+  List<dynamic> _routes = [];
+
+  // Dropdown Selections
+  int? _selectedChildId;
+  int? _selectedGradeId;
+  int? _selectedDivisionId;
+  int? _selectedRouteId;
+  int? _selectedPickupStopId;
+  int? _selectedDropStopId;
+
+  // Filtered lists based on parent selection
+  List<dynamic> _availableDivisions = [];
+  List<dynamic> _availableStops = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEnrollmentOptions();
+  }
+
+  Future<void> _loadEnrollmentOptions() async {
+    setState(() {
+      _isLoading = true;
+      _errorMsg = '';
+    });
+
+    final res = await ApiService.getSubscriptionEnrollmentOptions(widget.plan['id']);
+
+    if (mounted) {
+      if (res['success'] == true) {
+        setState(() {
+          _children = res['children'] ?? [];
+          _grades = res['grades'] ?? [];
+          _routes = res['routes'] ?? [];
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMsg = res['message'] ?? 'Failed to load options from server';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _submitEnrollment() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_selectedChildId == null ||
+        _selectedGradeId == null ||
+        _selectedDivisionId == null ||
+        _selectedRouteId == null ||
+        _selectedPickupStopId == null ||
+        _selectedDropStopId == null) {
+      setState(() {
+        _errorMsg = 'Please make all selections';
+      });
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+      _errorMsg = '';
+    });
+
+    final res = await ApiService.enrollSubscription(
+      widget.plan['id'],
+      childId: _selectedChildId!,
+      gradeId: _selectedGradeId!,
+      divisionId: _selectedDivisionId!,
+      routeId: _selectedRouteId!,
+      pickupStopId: _selectedPickupStopId!,
+      dropStopId: _selectedDropStopId!,
+    );
+
+    if (mounted) {
+      setState(() {
+        _isSaving = false;
+      });
+
+      if (res['success'] == true) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res['message'] ?? 'Successfully submitted enrollment request!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        setState(() {
+          _errorMsg = res['message'] ?? 'Failed to submit enrollment request';
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final media = MediaQuery.of(context);
+
+    return Container(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 16,
+        bottom: media.viewInsets.bottom + media.padding.bottom + 24,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Enroll Subscription',
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                widget.plan['name'] ?? '',
+                style: TextStyle(fontSize: 14, color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              if (_errorMsg.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.errorContainer.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _errorMsg,
+                    style: TextStyle(color: theme.colorScheme.error, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else ...[
+                // Child Dropdown
+                DropdownButtonFormField<int>(
+                  value: _selectedChildId,
+                  decoration: InputDecoration(
+                    labelText: 'Select Child',
+                    prefixIcon: const Icon(Icons.face_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  items: _children.map<DropdownMenuItem<int>>((c) {
+                    return DropdownMenuItem<int>(
+                      value: c['id'],
+                      child: Text(c['name'] ?? 'N/A'),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedChildId = val;
+                    });
+                  },
+                  validator: (value) => value == null ? 'Please select a child' : null,
+                ),
+                const SizedBox(height: 16),
+
+                // Grade Dropdown
+                DropdownButtonFormField<int>(
+                  value: _selectedGradeId,
+                  decoration: InputDecoration(
+                    labelText: 'Select Grade',
+                    prefixIcon: const Icon(Icons.school_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  items: _grades.map<DropdownMenuItem<int>>((g) {
+                    return DropdownMenuItem<int>(
+                      value: g['id'],
+                      child: Text(g['name'] ?? 'N/A'),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedGradeId = val;
+                      _selectedDivisionId = null;
+                      _availableDivisions = [];
+                      if (val != null) {
+                        final grade = _grades.firstWhere((g) => g['id'] == val);
+                        _availableDivisions = grade['divisions'] ?? [];
+                      }
+                    });
+                  },
+                  validator: (value) => value == null ? 'Please select a grade' : null,
+                ),
+                const SizedBox(height: 16),
+
+                // Division Dropdown
+                DropdownButtonFormField<int>(
+                  value: _selectedDivisionId,
+                  decoration: InputDecoration(
+                    labelText: 'Select Division',
+                    prefixIcon: const Icon(Icons.class_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  items: _availableDivisions.map<DropdownMenuItem<int>>((d) {
+                    return DropdownMenuItem<int>(
+                      value: d['id'],
+                      child: Text(d['name'] ?? 'N/A'),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedDivisionId = val;
+                    });
+                  },
+                  validator: (value) => value == null ? 'Please select a division' : null,
+                ),
+                const SizedBox(height: 16),
+
+                // Route Dropdown
+                DropdownButtonFormField<int>(
+                  value: _selectedRouteId,
+                  decoration: InputDecoration(
+                    labelText: 'Select Route',
+                    prefixIcon: const Icon(Icons.directions_bus_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  items: _routes.map<DropdownMenuItem<int>>((r) {
+                    return DropdownMenuItem<int>(
+                      value: r['id'],
+                      child: Text(r['name'] ?? 'N/A'),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedRouteId = val;
+                      _selectedPickupStopId = null;
+                      _selectedDropStopId = null;
+                      _availableStops = [];
+                      if (val != null) {
+                        final route = _routes.firstWhere((r) => r['id'] == val);
+                        _availableStops = route['stops'] ?? [];
+                      }
+                    });
+                  },
+                  validator: (value) => value == null ? 'Please select a route' : null,
+                ),
+                const SizedBox(height: 16),
+
+                // Pickup Stop Dropdown
+                DropdownButtonFormField<int>(
+                  value: _selectedPickupStopId,
+                  decoration: InputDecoration(
+                    labelText: 'Pickup Stop',
+                    prefixIcon: const Icon(Icons.location_on_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  items: _availableStops.map<DropdownMenuItem<int>>((s) {
+                    return DropdownMenuItem<int>(
+                      value: s['id'],
+                      child: Text(s['name'] ?? 'N/A'),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedPickupStopId = val;
+                    });
+                  },
+                  validator: (value) => value == null ? 'Please select a pickup stop' : null,
+                ),
+                const SizedBox(height: 16),
+
+                // Drop Stop Dropdown
+                DropdownButtonFormField<int>(
+                  value: _selectedDropStopId,
+                  decoration: InputDecoration(
+                    labelText: 'Drop Stop',
+                    prefixIcon: const Icon(Icons.wrong_location_rounded),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  items: _availableStops.map<DropdownMenuItem<int>>((s) {
+                    return DropdownMenuItem<int>(
+                      value: s['id'],
+                      child: Text(s['name'] ?? 'N/A'),
+                    );
+                  }).toList(),
+                  onChanged: (val) {
+                    setState(() {
+                      _selectedDropStopId = val;
+                    });
+                  },
+                  validator: (value) => value == null ? 'Please select a drop stop' : null,
+                ),
+                const SizedBox(height: 24),
+
+                ElevatedButton(
+                  onPressed: _isSaving ? null : _submitEnrollment,
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text(
+                          'Submit Subscription Request',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
