@@ -437,65 +437,148 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                       final String email = rel['email'] ?? '';
                       final String mobile = rel['mobile'] ?? '';
 
-                      return Card(
-                        elevation: 0,
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(
+                      final Color bgRole = role.toLowerCase() == 'mother'
+                          ? const Color(0xFFFDE8E8)
+                          : role.toLowerCase() == 'father'
+                              ? const Color(0xFFE1EFFE)
+                              : role.toLowerCase() == 'guardian'
+                                  ? const Color(0xFFE5F7F6)
+                                  : const Color(0xFFF3F4F6);
+
+                      final Color textRole = role.toLowerCase() == 'mother'
+                          ? const Color(0xFFE02424)
+                          : role.toLowerCase() == 'father'
+                              ? const Color(0xFF1E429F)
+                              : role.toLowerCase() == 'guardian'
+                                  ? const Color(0xFF0369A1)
+                                  : const Color(0xFF4B5563);
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(color: Colors.grey.shade200),
+                          border: Border.all(color: Colors.grey.shade100),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.02),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          leading: CircleAvatar(
-                            backgroundColor: theme.colorScheme.secondaryContainer,
-                            child: Text(
-                              name.isNotEmpty ? name[0] : 'P',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onSecondaryContainer),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          leading: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  theme.colorScheme.primary.withOpacity(0.08),
+                                  theme.colorScheme.primary.withOpacity(0.15),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                name.isNotEmpty ? name[0].toUpperCase() : 'P',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
                             ),
                           ),
                           title: Row(
                             children: [
                               Expanded(
-                                child: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                child: Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: Colors.black87,
+                                  ),
+                                ),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(8),
+                                  color: bgRole,
+                                  borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
                                   role,
                                   style: TextStyle(
-                                    fontSize: 10,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.primary,
+                                    color: textRole,
                                   ),
                                 ),
                               ),
                             ],
                           ),
                           subtitle: Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              email.isNotEmpty ? email : mobile,
-                              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  email.isNotEmpty ? Icons.mail_outline_rounded : Icons.phone_android_rounded,
+                                  size: 14,
+                                  color: Colors.grey.shade400,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    email.isNotEmpty ? email : mobile,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 13,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit_outlined, color: Colors.grey),
-                                tooltip: 'Edit relationship',
-                                onPressed: () => _showEditRelationshipBottomSheet(rel),
-                              ),
-                              if (relationships.length > 1)
-                                IconButton(
-                                  icon: const Icon(Icons.link_off_rounded, color: Colors.grey),
-                                  tooltip: 'Remove relationship',
-                                  onPressed: () => _removeRelationship(rel['id']),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  shape: BoxShape.circle,
                                 ),
+                                child: IconButton(
+                                  icon: Icon(Icons.edit_rounded, color: Colors.blue.shade700, size: 18),
+                                  tooltip: 'Edit relationship',
+                                  constraints: const BoxConstraints(),
+                                  padding: const EdgeInsets.all(8),
+                                  onPressed: () => _showEditRelationshipBottomSheet(rel),
+                                ),
+                              ),
+                              if (relationships.length > 1) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade50,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: IconButton(
+                                    icon: Icon(Icons.link_off_rounded, color: Colors.red.shade700, size: 18),
+                                    tooltip: 'Remove relationship',
+                                    constraints: const BoxConstraints(),
+                                    padding: const EdgeInsets.all(8),
+                                    onPressed: () => _removeRelationship(rel['id']),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
