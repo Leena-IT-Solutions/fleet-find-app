@@ -66,7 +66,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
-  int _counter = 0;
+
   Map<String, dynamic>? _user;
   int _currentIndex = 2; // Default to Home page in the center
   late AnimationController _rotationController;
@@ -692,11 +692,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+
 
   Future<void> _handleLogout() async {
     showDialog(
@@ -1225,50 +1221,195 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   }
 
   Widget _buildHomePage(ThemeData theme, String userName, String userEmail) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.directions_bus_rounded,
-              size: 64,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Welcome, $userName!',
-              style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            if (userEmail.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                userEmail,
-                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
-              ),
-            ],
-            const SizedBox(height: 32),
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _incrementCounter,
-              icon: const Icon(Icons.add),
-              label: const Text('Increment Counter'),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return FutureBuilder<Map<String, dynamic>>(
+      future: ApiService.getChildren(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError || snapshot.data == null || snapshot.data!['success'] == false) {
+          final errorMsg = snapshot.data?['message'] ?? 'Failed to load children.';
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline_rounded, size: 64, color: theme.colorScheme.error),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error Loading Children',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.error),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    errorMsg,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => setState(() {}),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Retry'),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
+          );
+        }
+
+        final childrenList = (snapshot.data!['children'] as List?) ?? [];
+
+        if (childrenList.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.child_care_rounded, size: 100, color: theme.colorScheme.primary.withOpacity(0.3)),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'No Children Registered',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Please add your children to register for subscription plans, schedule trips, and track transit.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey, height: 1.4),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    onPressed: _showAddChildBottomSheet,
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('Add a Child'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          itemCount: childrenList.length,
+          itemBuilder: (context, index) {
+            final child = childrenList[index];
+            final dobStr = child['dob'] as String?;
+            final gender = child['gender'] as String?;
+            final childPhoto = child['photo'] as String?;
+
+            // Age calculation helper
+            String ageInfo = '';
+            if (dobStr != null && dobStr.isNotEmpty) {
+              try {
+                final dob = DateTime.parse(dobStr);
+                final now = DateTime.now();
+                int age = now.year - dob.year;
+                if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+                  age--;
+                }
+                ageInfo = age > 0 ? '$age Years Old' : 'Infant';
+              } catch (_) {}
+            }
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 16),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () async {
+                  final result = await Navigator.pushNamed(
+                    context,
+                    '/child-detail',
+                    arguments: child,
+                  );
+                  if (result == true) {
+                    setState(() {});
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: theme.colorScheme.primaryContainer,
+                        backgroundImage: childPhoto != null && childPhoto.isNotEmpty && childPhoto.startsWith('http')
+                            ? NetworkImage(childPhoto)
+                            : null,
+                        child: childPhoto == null || childPhoto.isEmpty || !childPhoto.startsWith('http')
+                            ? Icon(
+                                Icons.face_rounded,
+                                size: 32,
+                                color: theme.colorScheme.primary,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              child['name'] ?? 'N/A',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                if (ageInfo.isNotEmpty) ...[
+                                  Text(
+                                    ageInfo,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                if (gender != null && gender.isNotEmpty)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      gender,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.onPrimaryContainer,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
