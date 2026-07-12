@@ -247,6 +247,39 @@ class ApiService {
     }
   }
 
+  // Get trips assigned to the logged-in driver
+  static Future<Map<String, dynamic>> getDriverTrips() async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'No auth token found'};
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/driver/trips'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'driver': data['driver'],
+          'trips': data['trips'],
+        };
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to load driver trips'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   // Update Profile API request
   static Future<Map<String, dynamic>> updateProfile({
     required String name,
