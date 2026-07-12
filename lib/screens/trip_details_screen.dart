@@ -99,15 +99,14 @@ class TripDetailsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-
                     // Crew Info (Driver & Attendant)
-                    Row(
-                      children: [
-                        // Driver
-                        if (driver != null)
-                          Expanded(
-                            child: Row(
+                    if (driver != null || assistant != null) ...[
+                      const SizedBox(height: 16),
+                      Column(
+                        children: [
+                          // Driver
+                          if (driver != null)
+                            Row(
                               children: [
                                 Icon(Icons.badge_rounded, color: Colors.teal.shade300, size: 20),
                                 const SizedBox(width: 8),
@@ -118,8 +117,7 @@ class TripDetailsScreen extends StatelessWidget {
                                       const Text('Driver', style: TextStyle(color: Colors.grey, fontSize: 11)),
                                       Text(
                                         driver['name'] ?? 'N/A',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                       ),
                                     ],
                                   ),
@@ -133,12 +131,10 @@ class TripDetailsScreen extends StatelessWidget {
                                   ),
                               ],
                             ),
-                          ),
-                        const SizedBox(width: 8),
-                        // Attendant/Assistant
-                        if (assistant != null)
-                          Expanded(
-                            child: Row(
+                          if (driver != null && assistant != null) const SizedBox(height: 12),
+                          // Attendant/Assistant
+                          if (assistant != null)
+                            Row(
                               children: [
                                 Icon(Icons.support_agent_rounded, color: Colors.orange.shade300, size: 20),
                                 const SizedBox(width: 8),
@@ -149,8 +145,7 @@ class TripDetailsScreen extends StatelessWidget {
                                       const Text('Attendant', style: TextStyle(color: Colors.grey, fontSize: 11)),
                                       Text(
                                         assistant['name'] ?? 'N/A',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                       ),
                                     ],
                                   ),
@@ -164,9 +159,9 @@ class TripDetailsScreen extends StatelessWidget {
                                   ),
                               ],
                             ),
-                          ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
