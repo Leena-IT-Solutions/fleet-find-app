@@ -494,88 +494,88 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                               ),
                             ),
                           ),
-                          title: Row(
+                          title: Text(
+                            name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                    color: Colors.black87,
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: bgRole,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      role,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: textRole,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: bgRole,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  role,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                    color: textRole,
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Icon(
+                                    email.isNotEmpty ? Icons.mail_outline_rounded : Icons.phone_android_rounded,
+                                    size: 14,
+                                    color: Colors.grey.shade400,
                                   ),
-                                ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      email.isNotEmpty ? email : mobile,
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 13,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
-                          ),
-                          subtitle: Padding(
-                            padding: const EdgeInsets.only(top: 6),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  email.isNotEmpty ? Icons.mail_outline_rounded : Icons.phone_android_rounded,
-                                  size: 14,
-                                  color: Colors.grey.shade400,
-                                ),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    email.isNotEmpty ? email : mobile,
-                                    style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 13,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
                           ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade50,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: IconButton(
-                                  icon: Icon(Icons.edit_rounded, color: Colors.blue.shade700, size: 18),
-                                  tooltip: 'Edit relationship',
-                                  constraints: const BoxConstraints(),
-                                  padding: const EdgeInsets.all(8),
-                                  onPressed: () => _showEditRelationshipBottomSheet(rel),
+                              InkWell(
+                                onTap: () => _showEditRelationshipBottomSheet(rel),
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.shade50,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(Icons.edit_rounded, color: Colors.blue.shade700, size: 16),
                                 ),
                               ),
                               if (relationships.length > 1) ...[
                                 const SizedBox(width: 8),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.shade50,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: IconButton(
-                                    icon: Icon(Icons.link_off_rounded, color: Colors.red.shade700, size: 18),
-                                    tooltip: 'Remove relationship',
-                                    constraints: const BoxConstraints(),
-                                    padding: const EdgeInsets.all(8),
-                                    onPressed: () => _removeRelationship(rel['id']),
+                                InkWell(
+                                  onTap: () => _removeRelationship(rel['id']),
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.shade50,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(Icons.link_off_rounded, color: Colors.red.shade700, size: 16),
                                   ),
                                 ),
                               ],
