@@ -292,6 +292,9 @@ class TripDetailsScreen extends StatelessWidget {
                                     final isPickup = child['is_pickup'] == true;
                                     final isDrop = child['is_drop'] == true;
 
+                                    final parentPhone = child['parent_phone'] ?? '';
+                                    final parentName = child['parent_name'] ?? 'Parent';
+
                                     // Color coding status
                                     Color statusBgColor = Colors.grey.shade100;
                                     Color statusTextColor = Colors.grey.shade600;
@@ -319,11 +322,11 @@ class TripDetailsScreen extends StatelessWidget {
                                       child: Row(
                                         children: [
                                           CircleAvatar(
-                                            radius: 16,
+                                            radius: 18,
                                             backgroundColor: theme.colorScheme.secondaryContainer,
                                             child: Icon(
                                               Icons.person_rounded,
-                                              size: 16,
+                                              size: 18,
                                               color: theme.colorScheme.onSecondaryContainer,
                                             ),
                                           ),
@@ -347,65 +350,71 @@ class TripDetailsScreen extends StatelessWidget {
                                                     fontSize: 12,
                                                   ),
                                                 ),
+                                                const SizedBox(height: 6),
+                                                Row(
+                                                  children: [
+                                                    // Status badge
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: statusBgColor,
+                                                        borderRadius: BorderRadius.circular(8),
+                                                      ),
+                                                      child: Text(
+                                                        status.toString().toUpperCase(),
+                                                        style: TextStyle(
+                                                          color: statusTextColor,
+                                                          fontWeight: FontWeight.bold,
+                                                          fontSize: 9,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    // Stop Type (Pickup/Drop) Badge
+                                                    if (isPickup)
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.blue.withOpacity(0.1),
+                                                          borderRadius: BorderRadius.circular(6),
+                                                        ),
+                                                        child: const Text(
+                                                          'PICKUP',
+                                                          style: TextStyle(
+                                                            color: Colors.blue,
+                                                            fontWeight: FontWeight.bold,
+                                                            fontSize: 8,
+                                                          ),
+                                                        ),
+                                                      )
+                                                    else if (isDrop)
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.purple.withOpacity(0.1),
+                                                          borderRadius: BorderRadius.circular(6),
+                                                        ),
+                                                        child: const Text(
+                                                          'DROP',
+                                                          style: TextStyle(
+                                                            color: Colors.purple,
+                                                            fontWeight: FontWeight.bold,
+                                                            fontSize: 8,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
                                               ],
                                             ),
                                           ),
                                           const SizedBox(width: 8),
-                                          Column(
-                                            crossAxisAlignment: CrossAxisAlignment.end,
-                                            children: [
-                                              // Status badge
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: statusBgColor,
-                                                  borderRadius: BorderRadius.circular(8),
-                                                ),
-                                                child: Text(
-                                                  status.toString().toUpperCase(),
-                                                  style: TextStyle(
-                                                    color: statusTextColor,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 10,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              // Stop Type (Pickup/Drop) Badge
-                                              if (isPickup)
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.blue.withOpacity(0.1),
-                                                    borderRadius: BorderRadius.circular(6),
-                                                  ),
-                                                  child: const Text(
-                                                    'PICKUP',
-                                                    style: TextStyle(
-                                                      color: Colors.blue,
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 8,
-                                                    ),
-                                                  ),
-                                                )
-                                              else if (isDrop)
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.purple.withOpacity(0.1),
-                                                    borderRadius: BorderRadius.circular(6),
-                                                  ),
-                                                  child: const Text(
-                                                    'DROP',
-                                                    style: TextStyle(
-                                                      color: Colors.purple,
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 8,
-                                                    ),
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
+                                          if (parentPhone.isNotEmpty)
+                                            IconButton(
+                                              icon: const Icon(Icons.phone_rounded, color: Colors.teal),
+                                              tooltip: 'Call Parent ($parentName)',
+                                              onPressed: () => _makeCall(parentPhone),
+                                            ),
                                         ],
                                       ),
                                     );
