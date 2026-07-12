@@ -78,6 +78,11 @@
 		<string>FleetFind needs background location access to keep sharing your location with your group even when the app is in the background.</string>
 		<key>NSLocationAlwaysUsageDescription</key>
 		<string>FleetFind needs location access in the background to share location voluntarily with group members.</string>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>location</string>
+			<string>fetch</string>
+		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>

@@ -1,10 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/location_service.dart';
 
-class TripDetailsScreen extends StatelessWidget {
+class TripDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> trip;
 
   const TripDetailsScreen({super.key, required this.trip});
+
+  @override
+  State<TripDetailsScreen> createState() => _TripDetailsScreenState();
+}
+
+class _TripDetailsScreenState extends State<TripDetailsScreen> {
+  bool _isTracking = false;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final tripId = widget.trip['id'] as int?;
+    if (tripId != null) {
+      _isTracking = LocationService().isTracking && LocationService().activeTripId == tripId;
+    }
+  }
 
   Future<void> _makeCall(String number) async {
     if (number.isEmpty) return;
@@ -14,15 +32,68 @@ class TripDetailsScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _toggleTracking() async {
+    final tripId = widget.trip['id'] as int?;
+    if (tripId == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      if (_isTracking) {
+        await LocationService().stopTripTracking(tripId);
+        setState(() {
+          _isTracking = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Live location sharing stopped.')),
+          );
+        }
+      } else {
+        final success = await LocationService().startTripTracking(tripId);
+        if (success) {
+          setState(() {
+            _isTracking = true;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Live location sharing started successfully!')),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to start live location sharing. Verify location permissions.')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tripName = trip['name'] ?? 'Trip Details';
-    final orgName = trip['organization'] ?? 'N/A';
-    final vehicle = trip['vehicle'] as Map<String, dynamic>?;
-    final driver = trip['driver'] as Map<String, dynamic>?;
-    final assistant = trip['assistant'] as Map<String, dynamic>?;
-    final stops = (trip['stops'] as List?) ?? [];
+    final tripName = widget.trip['name'] ?? 'Trip Details';
+    final orgName = widget.trip['organization'] ?? 'N/A';
+    final vehicle = widget.trip['vehicle'] as Map<String, dynamic>?;
+    final driver = widget.trip['driver'] as Map<String, dynamic>?;
+    final assistant = widget.trip['assistant'] as Map<String, dynamic>?;
+    final stops = (widget.trip['stops'] as List?) ?? [];
 
     return Scaffold(
       appBar: AppBar(
@@ -99,6 +170,7 @@ class TripDetailsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
+                    
                     // Crew Info (Driver & Attendant)
                     if (driver != null || assistant != null) ...[
                       const SizedBox(height: 16),
@@ -163,6 +235,39 @@ class TripDetailsScreen extends StatelessWidget {
                       ),
                     ],
                   ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // 2. Go Live Button
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: _isLoading ? null : _toggleTracking,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _isTracking ? Colors.red : Colors.green,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
+                ),
+                icon: _isLoading 
+                    ? const SizedBox(
+                        width: 18, 
+                        height: 18, 
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                      )
+                    : Icon(_isTracking ? Icons.portable_wifi_off_rounded : Icons.sensors_rounded),
+                label: Text(
+                  _isLoading 
+                      ? 'Processing...' 
+                      : _isTracking 
+                          ? 'STOP LIVE SHARING' 
+                          : 'GO LIVE',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, letterSpacing: 0.5),
                 ),
               ),
             ),

@@ -1115,4 +1115,64 @@ class ApiService {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
+
+  // Toggle Trip Tracking
+  static Future<Map<String, dynamic>> toggleTripTracking(int tripId, bool isTracking) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/trip/$tripId/toggle-tracking'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'is_tracking': isTracking,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'is_tracking': data['is_tracking'], 'message': data['message']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to toggle tracking'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Update Trip Location
+  static Future<Map<String, dynamic>> updateTripLocation(int tripId, double lat, double lng, {double? speed}) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/trip/$tripId/location'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'latitude': lat,
+          'longitude': lng,
+          if (speed != null) 'speed': speed,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message']};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to update trip location'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
 }

@@ -13,10 +13,8 @@ import 'services/location_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LocationService().init();
   final loggedIn = await ApiService.isLoggedIn();
-  if (loggedIn) {
-    await LocationService().init();
-  }
   runApp(MyApp(loggedIn: loggedIn));
 }
 
@@ -1671,7 +1669,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                             MaterialPageRoute(
                               builder: (context) => TripDetailsScreen(trip: t),
                             ),
-                          );
+                          ).then((_) {
+                            setState(() {});
+                          });
                         },
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
@@ -1705,16 +1705,40 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                       ],
                                     ),
                                   ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Text(
-                                      'Active Route',
-                                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11),
-                                    ),
+                                  Row(
+                                    children: [
+                                      if (LocationService().isTracking && LocationService().activeTripId == t['id'])
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          margin: const EdgeInsets.only(right: 6),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: const [
+                                              Icon(Icons.sensors_rounded, color: Colors.red, size: 10),
+                                              SizedBox(width: 4),
+                                              Text(
+                                                'LIVE',
+                                                style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 11),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Text(
+                                          'Active Route',
+                                          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
@@ -2055,7 +2079,9 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                             MaterialPageRoute(
                               builder: (context) => TripDetailsScreen(trip: t),
                             ),
-                          );
+                          ).then((_) {
+                            setState(() {});
+                          });
                         },
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
@@ -2089,16 +2115,40 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                       ],
                                     ),
                                   ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Text(
-                                      'Active Route',
-                                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11),
-                                    ),
+                                  Row(
+                                    children: [
+                                      if (LocationService().isTracking && LocationService().activeTripId == t['id'])
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          margin: const EdgeInsets.only(right: 6),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: const [
+                                              Icon(Icons.sensors_rounded, color: Colors.red, size: 10),
+                                              SizedBox(width: 4),
+                                              Text(
+                                                'LIVE',
+                                                style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 11),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Text(
+                                          'Active Route',
+                                          style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
