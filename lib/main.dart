@@ -1855,14 +1855,14 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   Widget _buildAttendantPage() {
     final theme = Theme.of(context);
     return FutureBuilder<Map<String, dynamic>>(
-      future: ApiService.getOrganization(organizationId: _selectedOrganizationId),
+      future: ApiService.getAttendantTrips(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError || snapshot.data == null || snapshot.data!['success'] == false) {
-          final errorMsg = snapshot.data?['message'] ?? 'Failed to load attendants.';
+          final errorMsg = snapshot.data?['message'] ?? 'Failed to load attendant details.';
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -1872,7 +1872,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   Icon(Icons.error_outline_rounded, size: 64, color: theme.colorScheme.error),
                   const SizedBox(height: 16),
                   Text(
-                    'Error Loading Attendants',
+                    'Error Loading Details',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.error),
                   ),
                   const SizedBox(height: 8),
@@ -1893,113 +1893,386 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           );
         }
 
-        final org = snapshot.data!['organization'] as Map<String, dynamic>;
-        final attendants = (org['attendants'] as List?) ?? [];
-        final allOrgs = (snapshot.data!['organizations'] as List?) ?? [];
+        final attendant = snapshot.data!['attendant'] as Map<String, dynamic>? ?? {};
+        final trips = (snapshot.data!['trips'] as List?) ?? [];
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (allOrgs.length > 1) ...[
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12.0),
+        final attendantName = attendant['name'] ?? 'Attendant Name';
+        final attendantEmail = attendant['email'] ?? '';
+        final attendantMobile = attendant['mobile'] ?? '';
+        final attendantPhoto = attendant['profile_photo'] as String?;
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            setState(() {});
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Attendant Profile Header Card
+                Card(
+                  elevation: 4,
+                  shadowColor: theme.colorScheme.shadow.withOpacity(0.1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(color: theme.colorScheme.primary.withOpacity(0.1)),
+                  ),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<int>(
-                        value: _selectedOrganizationId ?? org['id'],
-                        icon: Icon(Icons.keyboard_arrow_down_rounded, color: theme.colorScheme.primary),
-                        isExpanded: true,
-                        dropdownColor: theme.colorScheme.surface,
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                        items: allOrgs.map<DropdownMenuItem<int>>((dynamic o) {
-                          return DropdownMenuItem<int>(
-                            value: o['id'] as int,
-                            child: Text(o['name'] ?? 'N/A'),
-                          );
-                        }).toList(),
-                        onChanged: (int? newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              _selectedOrganizationId = newValue;
-                            });
-                          }
-                        },
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.colorScheme.primaryContainer.withOpacity(0.2),
+                          theme.colorScheme.surface,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
+                    ),
+                    padding: const EdgeInsets.all(20.0),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundColor: theme.colorScheme.primary,
+                          backgroundImage: attendantPhoto != null && attendantPhoto.isNotEmpty && attendantPhoto.startsWith('http')
+                              ? NetworkImage(attendantPhoto)
+                              : null,
+                          child: attendantPhoto == null || attendantPhoto.isEmpty || !attendantPhoto.startsWith('http')
+                              ? Text(
+                                  attendantName.isNotEmpty ? attendantName[0].toUpperCase() : 'A',
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: Text(
+                                  'Duty Attendant',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: theme.colorScheme.primary,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                attendantName,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              if (attendantMobile.isNotEmpty)
+                                Row(
+                                  children: [
+                                    Icon(Icons.phone_android_rounded, size: 14, color: Colors.grey.shade600),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      attendantMobile,
+                                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                    ),
+                                  ],
+                                ),
+                              if (attendantEmail.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Row(
+                                  children: [
+                                    Icon(Icons.mail_outline_rounded, size: 14, color: Colors.grey.shade600),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        attendantEmail,
+                                        style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ],
-              Text(
-                'Registered Organization Attendants',
-                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'List of professional transit attendants registered under ${org['name']}.',
-                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 16),
-              if (attendants.isEmpty)
-                Card(
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(24.0),
-                    child: Center(
-                      child: Text(
-                        'No attendants registered under this organization.',
-                        style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                const SizedBox(height: 24),
+
+                // 2. Section Title
+                Row(
+                  children: [
+                    Icon(Icons.route_rounded, color: theme.colorScheme.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Assigned Transit Trips',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 17,
                       ),
                     ),
-                  ),
-                )
-              else
-                ...attendants.map((a) => Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      elevation: 0,
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${trips.length}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // 3. Trips Card List
+                if (trips.isEmpty)
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Icon(Icons.directions_bus_outlined, size: 48, color: Colors.grey.shade500),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'No trips currently assigned.',
+                              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  ...trips.map((dynamic t) {
+                    final tripName = t['name'] ?? 'N/A';
+                    final orgName = t['organization'] ?? 'N/A';
+                    final vehicle = t['vehicle'] as Map<String, dynamic>?;
+                    final driver = t['driver'] as Map<String, dynamic>?;
+                    final stops = (t['stops'] as List?) ?? [];
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      elevation: 2,
+                      shadowColor: theme.colorScheme.shadow.withOpacity(0.05),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                        side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.4)),
                       ),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                          child: Icon(Icons.assignment_ind_rounded, color: theme.colorScheme.primary, size: 20),
-                        ),
-                        title: Text(
-                          a['attendant_name'] ?? 'N/A',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: const Text('Role: Route Assistant'),
-                        trailing: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'Active',
-                            style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
-                          ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Trip Info Header Row
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        tripName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        orgName,
+                                        style: TextStyle(
+                                          color: theme.colorScheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Text(
+                                    'Active Route',
+                                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 24),
+
+                            // Vehicle & Crew Info
+                            Row(
+                              children: [
+                                // Vehicle Detail
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.directions_bus_rounded, color: Colors.blue.shade300, size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Vehicle',
+                                              style: TextStyle(color: Colors.grey, fontSize: 11),
+                                            ),
+                                            Text(
+                                              vehicle != null ? vehicle['registration_number'] ?? 'N/A' : 'N/A',
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Driver Detail
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.badge_rounded, color: Colors.teal.shade300, size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Driver',
+                                              style: TextStyle(color: Colors.grey, fontSize: 11),
+                                            ),
+                                            Text(
+                                              driver != null ? driver['name'] ?? 'N/A' : 'N/A',
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            if (stops.isNotEmpty) ...[
+                              const Divider(height: 24),
+                              const Text(
+                                'Scheduled Stops Timeline',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey),
+                              ),
+                              const SizedBox(height: 12),
+                              // Stops Timeline View
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: stops.length,
+                                itemBuilder: (context, index) {
+                                  final stop = stops[index];
+                                  final stopName = stop['name'] ?? 'N/A';
+                                  final stopTime = stop['time'] ?? 'N/A';
+                                  final displayTime = stopTime.toString().split(':').take(2).join(':');
+
+                                  return Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Timeline Dot & Line
+                                      Column(
+                                        children: [
+                                          Container(
+                                            width: 12,
+                                            height: 12,
+                                            decoration: BoxDecoration(
+                                              color: index == 0 ? theme.colorScheme.primary : theme.colorScheme.secondary,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          if (index < stops.length - 1)
+                                            Container(
+                                              width: 2,
+                                              height: 32,
+                                              color: Colors.grey.shade300,
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(width: 16),
+                                      // Stop Details
+                                      Expanded(
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(bottom: 8.0),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  stopName,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ),
+                                              Text(
+                                                displayTime,
+                                                style: TextStyle(
+                                                  color: theme.colorScheme.primary,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                    )),
-            ],
+                    );
+                  }).toList(),
+              ],
+            ),
           ),
         );
       },
