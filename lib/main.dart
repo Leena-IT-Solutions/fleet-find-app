@@ -3174,7 +3174,13 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   void _showVehicleDialog({required int orgId, Map<String, dynamic>? vehicle, required ThemeData theme}) {
     final isEditing = vehicle != null;
     final regController = TextEditingController(text: vehicle?['registration_number']);
-    final typeController = TextEditingController(text: vehicle?['type']);
+    final vehicleTypes = ['Bus', 'Rickshaw', 'Van', 'Tempo', 'Car'];
+    final typeVal = vehicle?['type'] as String?;
+    final typesList = List<String>.from(vehicleTypes);
+    if (typeVal != null && typeVal.isNotEmpty && !typesList.contains(typeVal)) {
+      typesList.add(typeVal);
+    }
+    String selectedType = typeVal != null && typeVal.isNotEmpty ? typeVal : 'Bus';
     String? errorText;
     bool isSaving = false;
 
@@ -3232,13 +3238,25 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   textCapitalization: TextCapitalization.characters,
                 ),
                 const SizedBox(height: 16),
-                TextField(
-                  controller: typeController,
+                DropdownButtonFormField<String>(
+                  value: selectedType,
                   decoration: const InputDecoration(
-                    labelText: 'Vehicle Type / Model',
-                    hintText: 'e.g. Bus, Van, Mini Bus',
+                    labelText: 'Vehicle Type',
                     border: OutlineInputBorder(),
                   ),
+                  items: typesList.map((type) {
+                    return DropdownMenuItem<String>(
+                      value: type,
+                      child: Text(type),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setDialogState(() {
+                        selectedType = value;
+                      });
+                    }
+                  },
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
@@ -3246,11 +3264,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       ? null
                       : () async {
                           final regNum = regController.text.trim();
-                          final type = typeController.text.trim();
 
-                          if (regNum.isEmpty || type.isEmpty) {
+                          if (regNum.isEmpty) {
                             setDialogState(() {
-                              errorText = 'All fields are required.';
+                              errorText = 'Registration Number is required.';
                             });
                             return;
                           }
@@ -3265,12 +3282,12 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                   orgId: orgId,
                                   vehicleId: vehicle['id'] as int,
                                   registrationNumber: regNum,
-                                  type: type,
+                                  type: selectedType,
                                 )
                               : await ApiService.addVehicle(
                                   orgId: orgId,
                                   registrationNumber: regNum,
-                                  type: type,
+                                  type: selectedType,
                                 );
 
                           if (res['success'] == true) {
