@@ -194,7 +194,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
   String _formatTime(String? timeStr) {
     if (timeStr == null || timeStr.isEmpty) return 'Offline';
     try {
-      final dateTime = DateTime.parse(timeStr);
+      final dateTime = DateTime.parse(timeStr).toLocal();
       final hour = dateTime.hour > 12 ? dateTime.hour - 12 : (dateTime.hour == 0 ? 12 : dateTime.hour);
       final min = dateTime.minute < 10 ? '0${dateTime.minute}' : '${dateTime.minute}';
       final period = dateTime.hour >= 12 ? 'PM' : 'AM';
