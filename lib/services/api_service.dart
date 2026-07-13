@@ -1199,4 +1199,106 @@ class ApiService {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
+
+  // Add a new vehicle to an organization
+  static Future<Map<String, dynamic>> addVehicle({
+    required int orgId,
+    required String registrationNumber,
+    required String type,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/organization/$orgId/vehicles'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'registration_number': registrationNumber,
+          'type': type,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 201) {
+        return {'success': true, 'message': data['message'] ?? 'Vehicle added successfully', 'vehicle': data['vehicle']};
+      } else {
+        final message = data['message'] ?? 'Failed to add vehicle';
+        final errors = data['errors'] as Map<String, dynamic>?;
+        return {'success': false, 'message': message, 'errors': errors};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Update an existing vehicle
+  static Future<Map<String, dynamic>> updateVehicle({
+    required int orgId,
+    required int vehicleId,
+    required String registrationNumber,
+    required String type,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/organization/$orgId/vehicles/$vehicleId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'registration_number': registrationNumber,
+          'type': type,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message'] ?? 'Vehicle updated successfully', 'vehicle': data['vehicle']};
+      } else {
+        final message = data['message'] ?? 'Failed to update vehicle';
+        final errors = data['errors'] as Map<String, dynamic>?;
+        return {'success': false, 'message': message, 'errors': errors};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Delete a vehicle
+  static Future<Map<String, dynamic>> deleteVehicle({
+    required int orgId,
+    required int vehicleId,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/organization/$orgId/vehicles/$vehicleId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message'] ?? 'Vehicle deleted successfully'};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to delete vehicle'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
 }

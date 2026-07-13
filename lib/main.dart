@@ -2962,7 +2962,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
               if (_activeOrgTabIndex == 0) ...[
                 _buildCrewTab(drivers, attendants, theme),
               ] else if (_activeOrgTabIndex == 1) ...[
-                _buildVehiclesTab(vehicles, theme),
+                _buildVehiclesTab(org['id'] as int, vehicles, theme),
               ] else ...[
                 _buildTripsTab(trips, theme),
               ],
@@ -3104,11 +3104,23 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildVehiclesTab(List<dynamic> vehicles, ThemeData theme) {
+  Widget _buildVehiclesTab(int orgId, List<dynamic> vehicles, ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader(theme, 'Registered Vehicles (${vehicles.length})', Icons.directions_bus_rounded),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: _buildSectionHeader(theme, 'Registered Vehicles (${vehicles.length})', Icons.directions_bus_rounded),
+            ),
+            IconButton(
+              icon: Icon(Icons.add_circle_outline_rounded, color: theme.colorScheme.primary, size: 24),
+              onPressed: () => _showVehicleDialog(orgId: orgId, theme: theme),
+              tooltip: 'Add Vehicle',
+            ),
+          ],
+        ),
         const SizedBox(height: 8),
         if (vehicles.isEmpty)
           const Padding(
@@ -3133,9 +3145,210 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(v['type'] ?? 'Vehicle'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.edit_outlined, color: theme.colorScheme.primary, size: 20),
+                        onPressed: () => _showVehicleDialog(orgId: orgId, vehicle: v, theme: theme),
+                        tooltip: 'Edit',
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete_outline_rounded, color: theme.colorScheme.error, size: 20),
+                        onPressed: () => _showDeleteVehicleConfirmation(
+                          orgId: orgId,
+                          vehicleId: v['id'] as int,
+                          registrationNumber: v['registration_number'] ?? 'N/A',
+                          theme: theme,
+                        ),
+                        tooltip: 'Delete',
+                      ),
+                    ],
+                  ),
                 ),
               )),
       ],
+    );
+  }
+
+  void _showVehicleDialog({required int orgId, Map<String, dynamic>? vehicle, required ThemeData theme}) {
+    final isEditing = vehicle != null;
+    final regController = TextEditingController(text: vehicle?['registration_number']);
+    final typeController = TextEditingController(text: vehicle?['type']);
+    String? errorText;
+    bool isSaving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Container(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  isEditing ? 'Edit Vehicle' : 'Add Vehicle',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                if (errorText != null) ...[
+                  Text(
+                    errorText!,
+                    style: TextStyle(color: theme.colorScheme.error, fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                TextField(
+                  controller: regController,
+                  decoration: const InputDecoration(
+                    labelText: 'Registration Number',
+                    hintText: 'e.g. MH05AT0599',
+                    border: OutlineInputBorder(),
+                  ),
+                  textCapitalization: TextCapitalization.characters,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: typeController,
+                  decoration: const InputDecoration(
+                    labelText: 'Vehicle Type / Model',
+                    hintText: 'e.g. Bus, Van, Mini Bus',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          final regNum = regController.text.trim();
+                          final type = typeController.text.trim();
+
+                          if (regNum.isEmpty || type.isEmpty) {
+                            setDialogState(() {
+                              errorText = 'All fields are required.';
+                            });
+                            return;
+                          }
+
+                          setDialogState(() {
+                            isSaving = true;
+                            errorText = null;
+                          });
+
+                          final res = isEditing
+                              ? await ApiService.updateVehicle(
+                                  orgId: orgId,
+                                  vehicleId: vehicle['id'] as int,
+                                  registrationNumber: regNum,
+                                  type: type,
+                                )
+                              : await ApiService.addVehicle(
+                                  orgId: orgId,
+                                  registrationNumber: regNum,
+                                  type: type,
+                                );
+
+                          if (res['success'] == true) {
+                            Navigator.pop(context);
+                            setState(() {});
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(
+                                content: Text(res['message'] ?? 'Saved successfully.'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } else {
+                            setDialogState(() {
+                              isSaving = false;
+                              errorText = res['message'] ?? 'Failed to save vehicle details.';
+                            });
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : Text(isEditing ? 'Save Changes' : 'Add Vehicle'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteVehicleConfirmation({required int orgId, required int vehicleId, required String registrationNumber, required ThemeData theme}) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Vehicle'),
+        content: Text('Are you sure you want to delete vehicle $registrationNumber? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final res = await ApiService.deleteVehicle(orgId: orgId, vehicleId: vehicleId);
+              if (res['success'] == true) {
+                setState(() {});
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  SnackBar(
+                    content: Text(res['message'] ?? 'Vehicle deleted successfully.'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  SnackBar(
+                    content: Text(res['message'] ?? 'Failed to delete vehicle.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+              foregroundColor: theme.colorScheme.onError,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
     );
   }
 
