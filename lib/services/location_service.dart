@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -191,7 +192,7 @@ Future<void> initializeService() async {
     'trip_tracking_channel',
     'FleetFind Live Route Tracking',
     description: 'This channel is used for live location sharing notifications.',
-    importance: Importance.low,
+    importance: Importance.high,
   );
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -230,6 +231,8 @@ Future<bool> onIosBackground(ServiceInstance service) async {
 void onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
 
+  StreamSubscription<Position>? positionStream;
+
   if (service is AndroidServiceInstance) {
     service.on('setAsForeground').listen((event) {
       service.setAsForegroundService();
@@ -240,10 +243,6 @@ void onStart(ServiceInstance service) async {
     });
   }
 
-  service.on('stopService').listen((event) {
-    service.stopSelf();
-  });
-
   // Pull local persisted parameters
   final prefs = await SharedPreferences.getInstance();
   int tripId = prefs.getInt('active_trip_id') ?? 0;
@@ -251,41 +250,17 @@ void onStart(ServiceInstance service) async {
   final token = prefs.getString('auth_token') ?? '';
   final baseUrl = prefs.getString('api_base_url') ?? '';
 
-  // Listener to support updating tripId on the fly
-  service.on('updateTripId').listen((event) {
-    if (event != null && event['tripId'] != null) {
-      tripId = event['tripId'] as int;
-    }
+  // Clean up on stop
+  service.on('stopService').listen((event) {
+    positionStream?.cancel();
+    service.stopSelf();
   });
 
-  // Helper to fetch and send location coordinates
-  Future<void> fetchAndSend() async {
+  // Helper to send coordinates
+  Future<void> sendCoordinates(double latitude, double longitude, double speed) async {
     if (tripId == 0) return;
     try {
-      Position? position;
-      try {
-        LocationSettings settings;
-        try {
-          settings = AppleSettings(
-            accuracy: LocationAccuracy.high,
-            activityType: ActivityType.automotiveNavigation,
-            pauseLocationUpdatesAutomatically: false,
-            showBackgroundLocationIndicator: true,
-          );
-        } catch (_) {
-          settings = const LocationSettings(
-            accuracy: LocationAccuracy.high,
-          );
-        }
-
-        position = await Geolocator.getCurrentPosition(
-          locationSettings: settings,
-        ).timeout(const Duration(seconds: 5));
-      } catch (_) {
-        position = await Geolocator.getLastKnownPosition();
-      }
-
-      if (position != null && baseUrl.isNotEmpty && token.isNotEmpty) {
+      if (baseUrl.isNotEmpty && token.isNotEmpty) {
         final url = Uri.parse('$baseUrl/trip/$tripId/location');
         await http.post(
           url,
@@ -295,41 +270,109 @@ void onStart(ServiceInstance service) async {
             'Authorization': 'Bearer $token',
           },
           body: jsonEncode({
-            'latitude': position.latitude,
-            'longitude': position.longitude,
-            'speed': position.speed,
+            'latitude': latitude,
+            'longitude': longitude,
+            'speed': speed,
           }),
         );
 
         // Broadcast to UI
         service.invoke('update', {
-          'latitude': position.latitude,
-          'longitude': position.longitude,
-          'speed': position.speed,
+          'latitude': latitude,
+          'longitude': longitude,
+          'speed': speed,
           'time': DateTime.now().toIso8601String(),
         });
 
         if (service is AndroidServiceInstance) {
           service.setForegroundNotificationInfo(
             title: 'FleetFind Live Route Tracking',
-            content: 'Sending updates (Lat: ${position.latitude.toStringAsFixed(4)}, Lng: ${position.longitude.toStringAsFixed(4)})',
+            content: 'Sending updates (Lat: ${latitude.toStringAsFixed(4)}, Lng: ${longitude.toStringAsFixed(4)})',
           );
         }
       }
-    } catch (e) {
-      // Ignore background errors
+    } catch (_) {
+      // Ignore background post errors
     }
   }
 
-  // Trigger immediately on start
-  fetchAndSend();
+  // Helper to fetch and send current location coordinates (one-shot fallback)
+  Future<void> fetchAndSendOneShot() async {
+    if (tripId == 0) return;
+    try {
+      Position? position = await Geolocator.getLastKnownPosition();
+      if (position != null) {
+        await sendCoordinates(position.latitude, position.longitude, position.speed);
+      }
+    } catch (_) {}
+  }
 
-  // Periodically fetch and push coordinates
-  Timer.periodic(Duration(seconds: interval), (timer) async {
+  // Initialize location stream with foreground settings
+  void initLocationStream() {
+    positionStream?.cancel();
+
+    LocationSettings settings;
+    try {
+      if (Platform.isAndroid) {
+        settings = AndroidSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 3,
+          intervalDuration: Duration(seconds: interval),
+          foregroundNotificationConfig: const ForegroundNotificationConfig(
+            notificationTitle: 'FleetFind Live Route Tracking',
+            notificationText: 'Live location sharing is active in the background.',
+            enableWakeLock: true,
+          ),
+        );
+      } else if (Platform.isIOS) {
+        settings = AppleSettings(
+          accuracy: LocationAccuracy.high,
+          activityType: ActivityType.automotiveNavigation,
+          pauseLocationUpdatesAutomatically: false,
+          showBackgroundLocationIndicator: true,
+        );
+      } else {
+        settings = const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 3,
+        );
+      }
+    } catch (_) {
+      settings = const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 3,
+      );
+    }
+
+    positionStream = Geolocator.getPositionStream(locationSettings: settings).listen(
+      (Position position) {
+        sendCoordinates(position.latitude, position.longitude, position.speed);
+      },
+      onError: (err) {
+        // Ignore stream errors
+      },
+    );
+  }
+
+  // Listener to support updating tripId on the fly
+  service.on('updateTripId').listen((event) {
+    if (event != null && event['tripId'] != null) {
+      tripId = event['tripId'] as int;
+      initLocationStream();
+    }
+  });
+
+  // Initial trigger
+  await fetchAndSendOneShot();
+  initLocationStream();
+
+  // Periodically check/send one-shot fallback location to prevent silence
+  Timer.periodic(Duration(seconds: interval * 2), (timer) async {
     if (tripId == 0) {
+      positionStream?.cancel();
       timer.cancel();
       return;
     }
-    fetchAndSend();
+    await fetchAndSendOneShot();
   });
 }
