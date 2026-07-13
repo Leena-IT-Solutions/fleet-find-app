@@ -4806,7 +4806,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                       : _currentIndex == 4
                           ? 'Profile'
                           : _currentIndex == 5
-                              ? 'Search'
+                              ? 'Search Organization'
                               : _currentIndex == 6
                                   ? 'Drivers'
                                   : _currentIndex == 7
