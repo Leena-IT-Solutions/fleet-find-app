@@ -31,9 +31,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF2C3E50),
-          primary: const Color(0xFF2C3E50),
           brightness: Brightness.light,
         ).copyWith(
+          primary: const Color(0xFF2C3E50),
           onPrimary: Colors.white,
         ),
         useMaterial3: true,
@@ -41,9 +41,9 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF2C3E50),
-          primary: const Color(0xFF5D9CEC),
           brightness: Brightness.dark,
         ).copyWith(
+          primary: const Color(0xFF5D9CEC),
           onPrimary: Colors.white,
         ),
         appBarTheme: const AppBarTheme(

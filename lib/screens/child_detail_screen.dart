@@ -63,8 +63,10 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+      builder: (context) {
+        final theme = Theme.of(context);
+        return Container(
+          padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -96,6 +98,9 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.primary,
+                  ),
                   child: const Text('Cancel'),
                 ),
                 const SizedBox(width: 12),
@@ -111,7 +116,8 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
             ),
           ],
         ),
-      ),
+      );
+    },
     );
 
     if (confirm == true) {
@@ -195,8 +201,10 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+      builder: (context) {
+        final theme = Theme.of(context);
+        return Container(
+          padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -228,6 +236,9 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context, false),
+                  style: TextButton.styleFrom(
+                    foregroundColor: theme.colorScheme.primary,
+                  ),
                   child: const Text('Cancel'),
                 ),
                 const SizedBox(width: 12),
@@ -243,7 +254,8 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
             ),
           ],
         ),
-      ),
+      );
+    },
     );
 
     if (confirm == true) {
@@ -324,9 +336,12 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(child['name'] ?? 'Child Profile'),
+        backgroundColor: theme.brightness == Brightness.dark ? const Color(0xFF1E2A38) : theme.colorScheme.primary,
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_rounded),
@@ -344,7 +359,7 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
           children: [
             // Top Section (Child Photo and Info)
             Container(
-              color: Colors.white,
+              color: theme.colorScheme.surface,
               padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
               child: Column(
                 children: [
@@ -372,7 +387,7 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                         Chip(
                           label: Text('$age Years Old'),
                           avatar: const Icon(Icons.cake_outlined, size: 16),
-                          backgroundColor: Colors.blue.shade50,
+                          backgroundColor: theme.brightness == Brightness.dark ? Colors.blue.shade900.withOpacity(0.3) : Colors.blue.shade50,
                           side: BorderSide.none,
                         ),
                       Chip(
@@ -385,11 +400,17 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                                   : Icons.transgender_rounded,
                           size: 16,
                         ),
-                        backgroundColor: gender == 'Male'
-                            ? Colors.green.shade50
-                            : gender == 'Female'
-                                ? Colors.pink.shade50
-                                : Colors.purple.shade50,
+                        backgroundColor: theme.brightness == Brightness.dark
+                            ? (gender == 'Male'
+                                ? Colors.green.shade900.withOpacity(0.3)
+                                : gender == 'Female'
+                                    ? Colors.pink.shade900.withOpacity(0.3)
+                                    : Colors.purple.shade900.withOpacity(0.3))
+                            : (gender == 'Male'
+                                ? Colors.green.shade50
+                                : gender == 'Female'
+                                    ? Colors.pink.shade50
+                                    : Colors.purple.shade50),
                         side: BorderSide.none,
                       ),
                     ],
@@ -398,7 +419,7 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                     const SizedBox(height: 12),
                     Text(
                       'DOB: $dob',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                      style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.grey.shade400 : Colors.grey.shade600, fontSize: 14),
                     ),
                   ],
                 ],
@@ -438,28 +459,29 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                       final String email = rel['email'] ?? '';
                       final String mobile = rel['mobile'] ?? '';
 
+                       final bool isDark = theme.brightness == Brightness.dark;
                       final Color bgRole = role.toLowerCase() == 'mother'
-                          ? const Color(0xFFFDE8E8)
+                          ? (isDark ? const Color(0xFF9B1C1C).withOpacity(0.2) : const Color(0xFFFDE8E8))
                           : role.toLowerCase() == 'father'
-                              ? const Color(0xFFE1EFFE)
+                              ? (isDark ? const Color(0xFF1E429F).withOpacity(0.2) : const Color(0xFFE1EFFE))
                               : role.toLowerCase() == 'guardian'
-                                  ? const Color(0xFFE5F7F6)
-                                  : const Color(0xFFF3F4F6);
+                                  ? (isDark ? const Color(0xFF0369A1).withOpacity(0.2) : const Color(0xFFE5F7F6))
+                                  : (isDark ? const Color(0xFF374151).withOpacity(0.2) : const Color(0xFFF3F4F6));
 
                       final Color textRole = role.toLowerCase() == 'mother'
-                          ? const Color(0xFFE02424)
+                          ? (isDark ? const Color(0xFFF87171) : const Color(0xFFE02424))
                           : role.toLowerCase() == 'father'
-                              ? const Color(0xFF1E429F)
+                              ? (isDark ? const Color(0xFF93C5FD) : const Color(0xFF1E429F))
                               : role.toLowerCase() == 'guardian'
-                                  ? const Color(0xFF0369A1)
-                                  : const Color(0xFF4B5563);
+                                  ? (isDark ? const Color(0xFF7DD3FC) : const Color(0xFF0369A1))
+                                  : (isDark ? const Color(0xFFD1D5DB) : const Color(0xFF4B5563));
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: theme.colorScheme.surface,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.shade100),
+                          border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.02),
@@ -497,10 +519,10 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                           ),
                           title: Text(
                             name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 15,
-                              color: Colors.black87,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                           subtitle: Column(
@@ -532,14 +554,14 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                                   Icon(
                                     email.isNotEmpty ? Icons.mail_outline_rounded : Icons.phone_android_rounded,
                                     size: 14,
-                                    color: Colors.grey.shade400,
+                                    color: theme.brightness == Brightness.dark ? Colors.grey.shade400 : Colors.grey.shade600,
                                   ),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
                                       email.isNotEmpty ? email : mobile,
                                       style: TextStyle(
-                                        color: Colors.grey.shade600,
+                                        color: theme.brightness == Brightness.dark ? Colors.grey.shade400 : Colors.grey.shade600,
                                         fontSize: 13,
                                       ),
                                       maxLines: 1,
@@ -856,8 +878,9 @@ class _AddRelationshipBottomSheetState extends State<_AddRelationshipBottomSheet
     }
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: EdgeInsets.only(
         left: 24,
@@ -934,6 +957,8 @@ class _AddRelationshipBottomSheetState extends State<_AddRelationshipBottomSheet
               ElevatedButton(
                 onPressed: _isSaving ? null : _submit,
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
