@@ -4222,6 +4222,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                           arguments: {
                             'is_admin_mode': true,
                             'org_id': orgId,
+                            'trip_id': r['trip_id'] as int,
                             'route_id': r['route_id'] as int,
                             'route_name': r['route_name'] ?? 'Route',
                           },

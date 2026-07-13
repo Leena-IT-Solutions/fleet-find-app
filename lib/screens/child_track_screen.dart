@@ -18,6 +18,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
   Map<String, dynamic>? _child;
   bool _isAdminMode = false;
   int? _adminOrgId;
+  int? _adminTripId;
   int? _adminRouteId;
   bool _isLoading = true;
   String _errorMsg = '';
@@ -85,6 +86,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
         if (args['is_admin_mode'] == true) {
           _isAdminMode = true;
           _adminOrgId = args['org_id'] as int?;
+          _adminTripId = args['trip_id'] as int?;
           _adminRouteId = args['route_id'] as int?;
           _childName = args['route_name'] ?? 'Route';
           _fetchTracking(isFirstTime: true);
@@ -117,8 +119,8 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
     try {
       final Map<String, dynamic> res;
       if (_isAdminMode) {
-        if (_adminOrgId == null || _adminRouteId == null) return;
-        res = await ApiService.getRouteTracking(_adminOrgId!, _adminRouteId!);
+        if (_adminOrgId == null || _adminTripId == null || _adminRouteId == null) return;
+        res = await ApiService.getRouteTracking(_adminOrgId!, _adminTripId!, _adminRouteId!);
       } else {
         final childId = _child!['id'] as int?;
         if (childId == null) return;

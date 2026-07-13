@@ -1406,13 +1406,13 @@ class ApiService {
   }
 
   // Get live route tracking coordinates for organization admins
-  static Future<Map<String, dynamic>> getRouteTracking(int orgId, int routeId) async {
+  static Future<Map<String, dynamic>> getRouteTracking(int orgId, int tripId, int routeId) async {
     try {
       final token = await getToken();
       if (token == null) return {'success': false, 'message': 'No authentication token found'};
 
       final response = await http.get(
-        Uri.parse('$baseUrl/organization/$orgId/routes/$routeId/tracking'),
+        Uri.parse('$baseUrl/organization/$orgId/trips/$tripId/routes/$routeId/tracking'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
