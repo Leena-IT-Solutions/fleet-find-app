@@ -228,15 +228,46 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
         }
       }
 
-      // 2. Fetch highlight path from bus to target stop
+      // 2. Fetch highlight path from bus to target stop along the sequence of the route
       final targetStop = _pickupStop ?? _dropStop;
       if (_animatedBusPosition != null && targetStop != null && _isTracking) {
         final stopLat = (targetStop['latitude'] as num?)?.toDouble();
         final stopLng = (targetStop['longitude'] as num?)?.toDouble();
         if (stopLat != null && stopLng != null) {
-          final start = _animatedBusPosition!;
-          final end = LatLng(stopLat, stopLng);
-          final coordString = '${start.longitude},${start.latitude};${end.longitude},${end.latitude}';
+          final busPos = _animatedBusPosition!;
+
+          // Find the closest point in _stopsPoints to the bus position
+          int closestStopIndex = 0;
+          double minDistance = double.maxFinite;
+          for (int i = 0; i < _stopsPoints.length; i++) {
+            final p = _stopsPoints[i];
+            final dist = math.pow(p.latitude - busPos.latitude, 2) +
+                math.pow(p.longitude - busPos.longitude, 2);
+            if (dist < minDistance) {
+              minDistance = dist.toDouble();
+              closestStopIndex = i;
+            }
+          }
+
+          int targetStopIndex = -1;
+          for (int i = 0; i < _stopsPoints.length; i++) {
+            if ((_stopsPoints[i].latitude - stopLat).abs() < 0.0001 &&
+                (_stopsPoints[i].longitude - stopLng).abs() < 0.0001) {
+              targetStopIndex = i;
+              break;
+            }
+          }
+
+          final List<LatLng> pointsToRoute = [busPos];
+          if (targetStopIndex != -1 && closestStopIndex < targetStopIndex) {
+            // Bus is before the target stop. Route through intermediate stops on the way to target stop
+            pointsToRoute.addAll(_stopsPoints.sublist(closestStopIndex + 1, targetStopIndex + 1));
+          } else {
+            // Fallback or bus has passed target stop
+            pointsToRoute.add(LatLng(stopLat, stopLng));
+          }
+
+          final coordString = pointsToRoute.map((p) => '${p.longitude},${p.latitude}').join(';');
           final url = Uri.parse('https://router.project-osrm.org/route/v1/driving/$coordString?overview=full&geometries=geojson');
           final response = await http.get(url).timeout(const Duration(seconds: 5));
           if (response.statusCode == 200) {
