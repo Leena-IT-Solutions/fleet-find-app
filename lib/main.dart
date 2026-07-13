@@ -3758,22 +3758,56 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 4),
+                                  const SizedBox(height: 6),
                                   Row(
                                     children: [
                                       Icon(Icons.person_rounded, size: 14, color: theme.colorScheme.secondary),
                                       const SizedBox(width: 6),
-                                      Text(
-                                        'Driver: ${r['driver_name']}',
-                                        style: const TextStyle(fontSize: 12),
+                                      Expanded(
+                                        child: Text(
+                                          'Driver: ${r['driver_name']}',
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
                                       ),
-                                      const SizedBox(width: 12),
+                                      if (r['driver_mobile'] != null && r['driver_mobile'].toString().isNotEmpty && r['driver_name'] != 'N/A')
+                                        IconButton(
+                                          icon: Icon(Icons.call, size: 16, color: theme.colorScheme.primary),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                          onPressed: () async {
+                                            final url = Uri.parse('tel:${r['driver_mobile']}');
+                                            if (await canLaunchUrl(url)) {
+                                              await launchUrl(url);
+                                            }
+                                          },
+                                          tooltip: 'Call Driver',
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Row(
+                                    children: [
                                       Icon(Icons.person_outline_rounded, size: 14, color: theme.colorScheme.secondary),
                                       const SizedBox(width: 6),
-                                      Text(
-                                        'Attendant: ${r['attendant_name']}',
-                                        style: const TextStyle(fontSize: 12),
+                                      Expanded(
+                                        child: Text(
+                                          'Attendant: ${r['attendant_name']}',
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
                                       ),
+                                      if (r['attendant_mobile'] != null && r['attendant_mobile'].toString().isNotEmpty && r['attendant_name'] != 'N/A')
+                                        IconButton(
+                                          icon: Icon(Icons.call, size: 16, color: theme.colorScheme.primary),
+                                          padding: EdgeInsets.zero,
+                                          constraints: const BoxConstraints(),
+                                          onPressed: () async {
+                                            final url = Uri.parse('tel:${r['attendant_mobile']}');
+                                            if (await canLaunchUrl(url)) {
+                                              await launchUrl(url);
+                                            }
+                                          },
+                                          tooltip: 'Call Attendant',
+                                        ),
                                     ],
                                   ),
                                 ],
