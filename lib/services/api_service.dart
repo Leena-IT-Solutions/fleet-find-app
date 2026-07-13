@@ -1301,4 +1301,68 @@ class ApiService {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
+
+  // Hire a crew member (driver or attendant)
+  static Future<Map<String, dynamic>> hireCrew({
+    required int orgId,
+    required String identity,
+    required String type, // 'driver' or 'attendant'
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/organization/$orgId/crew'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'identity': identity,
+          'type': type,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 201) {
+        return {'success': true, 'message': data['message'] ?? 'Crew member hired successfully'};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to hire crew member'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Remove a crew member
+  static Future<Map<String, dynamic>> unhireCrew({
+    required int orgId,
+    required String type, // 'driver' or 'attendant'
+    required int id,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/organization/$orgId/crew/$type/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message'] ?? 'Crew member removed successfully'};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to remove crew member'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
 }

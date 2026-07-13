@@ -2960,7 +2960,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
               // Active Tab Content
               if (_activeOrgTabIndex == 0) ...[
-                _buildCrewTab(drivers, attendants, theme),
+                _buildCrewTab(org['id'] as int, drivers, attendants, theme),
               ] else if (_activeOrgTabIndex == 1) ...[
                 _buildVehiclesTab(org['id'] as int, vehicles, theme),
               ] else ...[
@@ -3039,11 +3039,23 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildCrewTab(List<dynamic> drivers, List<dynamic> attendants, ThemeData theme) {
+  Widget _buildCrewTab(int orgId, List<dynamic> drivers, List<dynamic> attendants, ThemeData theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader(theme, 'Drivers (${drivers.length})', Icons.badge_rounded),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: _buildSectionHeader(theme, 'Drivers (${drivers.length})', Icons.badge_rounded),
+            ),
+            IconButton(
+              icon: Icon(Icons.add_circle_outline_rounded, color: theme.colorScheme.primary, size: 24),
+              onPressed: () => _showHireCrewDialog(orgId: orgId, theme: theme),
+              tooltip: 'Add Crew Member',
+            ),
+          ],
+        ),
         const SizedBox(height: 8),
         if (drivers.isEmpty)
           const Padding(
@@ -3067,9 +3079,18 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                     d['driver_name'] ?? 'N/A',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: d['license'] != null
-                      ? Text('License: ${d['license']}')
-                      : const Text('Driver'),
+                  subtitle: Text(d['driver_mobile'] ?? d['driver_email'] ?? 'Driver'),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete_outline_rounded, color: theme.colorScheme.error, size: 20),
+                    onPressed: () => _showDeleteCrewConfirmation(
+                      orgId: orgId,
+                      type: 'driver',
+                      crewId: d['id'] as int,
+                      name: d['driver_name'] ?? 'N/A',
+                      theme: theme,
+                    ),
+                    tooltip: 'Remove Driver',
+                  ),
                 ),
               )),
         const SizedBox(height: 16),
@@ -3097,10 +3118,222 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                     a['attendant_name'] ?? 'N/A',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: const Text('Attendant'),
+                  subtitle: Text(a['attendant_mobile'] ?? a['attendant_email'] ?? 'Attendant'),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete_outline_rounded, color: theme.colorScheme.error, size: 20),
+                    onPressed: () => _showDeleteCrewConfirmation(
+                      orgId: orgId,
+                      type: 'attendant',
+                      crewId: a['id'] as int,
+                      name: a['attendant_name'] ?? 'N/A',
+                      theme: theme,
+                    ),
+                    tooltip: 'Remove Attendant',
+                  ),
                 ),
               )),
       ],
+    );
+  }
+
+  void _showHireCrewDialog({required int orgId, required ThemeData theme}) {
+    final identityController = TextEditingController();
+    String selectedRole = 'driver'; // driver or attendant
+    String? errorText;
+    bool isSaving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Container(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Add Crew Member',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Link a registered user to your organization as a Pilot/Driver or travel assistant.',
+                  style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                if (errorText != null) ...[
+                  Text(
+                    errorText!,
+                    style: TextStyle(color: theme.colorScheme.error, fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                TextField(
+                  controller: identityController,
+                  decoration: const InputDecoration(
+                    labelText: 'User Email or Mobile',
+                    hintText: 'e.g. pilot@school.com or 9876543210',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Select Crew Role',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                const SizedBox(height: 8),
+                SegmentedButton<String>(
+                  segments: const <ButtonSegment<String>>[
+                    ButtonSegment<String>(
+                      value: 'driver',
+                      label: Text('DRIVER'),
+                      icon: Icon(Icons.directions_bus_rounded),
+                    ),
+                    ButtonSegment<String>(
+                      value: 'attendant',
+                      label: Text('ATTENDANT'),
+                      icon: Icon(Icons.supervised_user_circle_rounded),
+                    ),
+                  ],
+                  selected: <String>{selectedRole},
+                  onSelectionChanged: (Set<String> newSelection) {
+                    setDialogState(() {
+                      selectedRole = newSelection.first;
+                    });
+                  },
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          final identity = identityController.text.trim();
+
+                          if (identity.isEmpty) {
+                            setDialogState(() {
+                              errorText = 'Email or mobile is required.';
+                            });
+                            return;
+                          }
+
+                          setDialogState(() {
+                            isSaving = true;
+                            errorText = null;
+                          });
+
+                          final res = await ApiService.hireCrew(
+                            orgId: orgId,
+                            identity: identity,
+                            type: selectedRole,
+                          );
+
+                          if (res['success'] == true) {
+                            Navigator.pop(context);
+                            setState(() {});
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(
+                                content: Text(res['message'] ?? 'Crew member hired successfully.'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } else {
+                            setDialogState(() {
+                              isSaving = false;
+                              errorText = res['message'] ?? 'Failed to hire crew member.';
+                            });
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('HIRE CREW MEMBER'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteCrewConfirmation({
+    required int orgId,
+    required String type,
+    required int crewId,
+    required String name,
+    required ThemeData theme,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Remove ${type == 'driver' ? 'Driver' : 'Attendant'}'),
+        content: Text('Are you sure you want to remove crew member $name? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final res = await ApiService.unhireCrew(orgId: orgId, type: type, id: crewId);
+              if (res['success'] == true) {
+                setState(() {});
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  SnackBar(
+                    content: Text(res['message'] ?? 'Crew member removed successfully.'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(this.context).showSnackBar(
+                  SnackBar(
+                    content: Text(res['message'] ?? 'Failed to remove crew member.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+              foregroundColor: theme.colorScheme.onError,
+            ),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
     );
   }
 
