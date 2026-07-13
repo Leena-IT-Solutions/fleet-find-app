@@ -196,7 +196,7 @@ Future<void> initializeService() async {
 
   const AndroidNotificationChannel channel = AndroidNotificationChannel(
     'trip_tracking_channel',
-    'FleetFind Live Route Tracking',
+    'Wheels Tracker Live Route Tracking',
     description: 'This channel is used for live location sharing notifications.',
     importance: Importance.high,
   );
@@ -214,7 +214,7 @@ Future<void> initializeService() async {
       autoStart: false,
       isForegroundMode: true,
       notificationChannelId: 'trip_tracking_channel',
-      initialNotificationTitle: 'FleetFind Live Route Tracking',
+      initialNotificationTitle: 'Wheels Tracker Live Route Tracking',
       initialNotificationContent: 'Starting live location sharing...',
       foregroundServiceNotificationId: 991,
     ),
@@ -292,7 +292,7 @@ void onStart(ServiceInstance service) async {
 
         if (service is AndroidServiceInstance) {
           service.setForegroundNotificationInfo(
-            title: 'FleetFind Live Route Tracking',
+            title: 'Wheels Tracker Live Route Tracking',
             content: 'Sending updates (Lat: ${latitude.toStringAsFixed(4)}, Lng: ${longitude.toStringAsFixed(4)})',
           );
         }
@@ -325,7 +325,7 @@ void onStart(ServiceInstance service) async {
           distanceFilter: 3,
           intervalDuration: Duration(seconds: interval),
           foregroundNotificationConfig: const ForegroundNotificationConfig(
-            notificationTitle: 'FleetFind Live Route Tracking',
+            notificationTitle: 'Wheels Tracker Live Route Tracking',
             notificationText: 'Live location sharing is active in the background.',
             enableWakeLock: true,
           ),

@@ -106,12 +106,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     const SizedBox(height: 16),
                     // Title
                     Text(
-                      'FleetFind',
+                      'Wheels Tracker',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.headlineMedium?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
-                        letterSpacing: 1.5,
+                        letterSpacing: 0.5,
                       ),
                     ),
                     const SizedBox(height: 8),

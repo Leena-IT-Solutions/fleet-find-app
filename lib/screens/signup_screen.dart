@@ -125,7 +125,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Join FleetFind to keep track of operations',
+                      'Join Wheels Tracker to keep track of operations',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: const Color(0xFFCBD5E1),

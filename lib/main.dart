@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'FleetFind',
+      title: 'Wheels Tracker',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF2C3E50),
@@ -63,7 +63,7 @@ class MyApp extends StatelessWidget {
       initialRoute: loggedIn ? '/home' : '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
-        '/home': (context) => const MyHomePage(title: 'FleetFind Operations Board'),
+        '/home': (context) => const MyHomePage(title: 'Wheels Tracker Operations Board'),
         '/child-detail': (context) => const ChildDetailScreen(),
         '/child-track': (context) => const ChildTrackScreen(),
         '/organization-profile': (context) => const OrganizationProfileScreen(),

@@ -1,4 +1,4 @@
-package com.infoleena.fleetfind
+package com.infoleena.wheelstracker
 
 import io.flutter.embedding.android.FlutterActivity
 
