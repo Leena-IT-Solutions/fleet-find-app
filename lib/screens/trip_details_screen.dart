@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:geolocator/geolocator.dart';
 import '../services/location_service.dart';
 
 class TripDetailsScreen extends StatefulWidget {
@@ -70,6 +71,10 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
         await LocationService().stopTripTracking(tripId);
         setState(() {
           _isTracking = false;
+          _currentLat = null;
+          _currentLng = null;
+          _currentSpeed = null;
+          _lastUpdated = null;
         });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -82,6 +87,22 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           setState(() {
             _isTracking = true;
           });
+          // Fetch current position immediately for instant UI feedback
+          try {
+            final position = await Geolocator.getCurrentPosition(
+              locationSettings: const LocationSettings(
+                accuracy: LocationAccuracy.high,
+              ),
+            );
+            if (mounted) {
+              setState(() {
+                _currentLat = position.latitude;
+                _currentLng = position.longitude;
+                _currentSpeed = position.speed;
+                _lastUpdated = DateTime.now();
+              });
+            }
+          } catch (_) {}
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Live location sharing started successfully!')),

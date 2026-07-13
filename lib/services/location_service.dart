@@ -244,14 +244,9 @@ void onStart(ServiceInstance service) async {
     }
   });
 
-  // Periodically fetch and push coordinates
-  Timer.periodic(Duration(seconds: interval), (timer) async {
-    final isRunning = await FlutterBackgroundService().isRunning();
-    if (!isRunning || tripId == 0) {
-      timer.cancel();
-      return;
-    }
-
+  // Helper to fetch and send location coordinates
+  Future<void> fetchAndSend() async {
+    if (tripId == 0) return;
     try {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
@@ -262,7 +257,7 @@ void onStart(ServiceInstance service) async {
 
       if (baseUrl.isNotEmpty && token.isNotEmpty) {
         final url = Uri.parse('$baseUrl/trip/$tripId/location');
-        final response = await http.post(
+        await http.post(
           url,
           headers: {
             'Content-Type': 'application/json',
@@ -294,5 +289,18 @@ void onStart(ServiceInstance service) async {
     } catch (e) {
       // Ignore background errors
     }
+  }
+
+  // Trigger immediately on start
+  fetchAndSend();
+
+  // Periodically fetch and push coordinates
+  Timer.periodic(Duration(seconds: interval), (timer) async {
+    final isRunning = await FlutterBackgroundService().isRunning();
+    if (!isRunning || tripId == 0) {
+      timer.cancel();
+      return;
+    }
+    fetchAndSend();
   });
 }
