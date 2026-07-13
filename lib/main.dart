@@ -182,6 +182,52 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     }
   }
 
+  bool _isTripToggling = false;
+
+  Future<void> _toggleTripTracking(int tripId, bool currentlyTracking) async {
+    setState(() {
+      _isTripToggling = true;
+    });
+
+    try {
+      if (currentlyTracking) {
+        await LocationService().stopTripTracking(tripId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Live location sharing stopped.')),
+          );
+        }
+      } else {
+        final success = await LocationService().startTripTracking(tripId);
+        if (success) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Live location sharing started successfully!')),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Failed to start live location sharing. Verify location permissions.')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isTripToggling = false;
+        });
+      }
+    }
+  }
+
   Future<void> _loadUser() async {
     final cachedUser = await ApiService.getUser();
     if (cachedUser != null) {
@@ -1738,6 +1784,25 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                           style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11),
                                         ),
                                       ),
+                                      const SizedBox(width: 8),
+                                      _isTripToggling
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                            )
+                                          : Switch.adaptive(
+                                              value: LocationService().isTracking && LocationService().activeTripId == t['id'],
+                                              activeColor: Colors.green,
+                                              onChanged: _isTripToggling
+                                                  ? null
+                                                  : (val) {
+                                                      _toggleTripTracking(
+                                                        t['id'] as int,
+                                                        LocationService().isTracking && LocationService().activeTripId == t['id'],
+                                                      );
+                                                    },
+                                            ),
                                     ],
                                   ),
                                 ],
@@ -2148,6 +2213,25 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                           style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 11),
                                         ),
                                       ),
+                                      const SizedBox(width: 8),
+                                      _isTripToggling
+                                          ? const SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                            )
+                                          : Switch.adaptive(
+                                              value: LocationService().isTracking && LocationService().activeTripId == t['id'],
+                                              activeColor: Colors.green,
+                                              onChanged: _isTripToggling
+                                                  ? null
+                                                  : (val) {
+                                                      _toggleTripTracking(
+                                                        t['id'] as int,
+                                                        LocationService().isTracking && LocationService().activeTripId == t['id'],
+                                                      );
+                                                    },
+                                            ),
                                     ],
                                   ),
                                 ],
