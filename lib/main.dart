@@ -63,7 +63,7 @@ class MyApp extends StatelessWidget {
       initialRoute: loggedIn ? '/home' : '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
-        '/home': (context) => const MyHomePage(title: 'Wheels Tracker Operations Board'),
+        '/home': (context) => const MyHomePage(title: 'Wheels Tracker'),
         '/child-detail': (context) => const ChildDetailScreen(),
         '/child-track': (context) => const ChildTrackScreen(),
         '/organization-profile': (context) => const OrganizationProfileScreen(),
