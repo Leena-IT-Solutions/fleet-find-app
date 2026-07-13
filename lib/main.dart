@@ -8,6 +8,7 @@ import 'screens/group_detail_screen.dart';
 import 'screens/child_detail_screen.dart';
 import 'screens/organization_profile_screen.dart';
 import 'screens/trip_details_screen.dart';
+import 'screens/child_track_screen.dart';
 import 'services/api_service.dart';
 import 'services/location_service.dart';
 
@@ -49,6 +50,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const MyHomePage(title: 'FleetFind Operations Board'),
         '/child-detail': (context) => const ChildDetailScreen(),
+        '/child-track': (context) => const ChildTrackScreen(),
         '/organization-profile': (context) => const OrganizationProfileScreen(),
       },
     );
@@ -1065,7 +1067,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                               onTap: () async {
                                 final result = await Navigator.pushNamed(
                                   context,
-                                  '/child-detail',
+                                  '/child-track',
                                   arguments: child,
                                 );
                                 if (result == true) {

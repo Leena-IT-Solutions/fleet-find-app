@@ -976,6 +976,30 @@ class ApiService {
     }
   }
 
+  // Get live child bus tracking details
+  static Future<Map<String, dynamic>> getChildTracking(int id) async {
+    try {
+      final token = await getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'No authentication token found'};
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/children/$id/tracking'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      return data as Map<String, dynamic>;
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   // Add parent relationship to a child
   static Future<Map<String, dynamic>> addChildRelationship(
     int childId, {
