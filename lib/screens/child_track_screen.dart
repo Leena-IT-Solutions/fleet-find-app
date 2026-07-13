@@ -37,6 +37,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
   int _nextStopIndex = -1;
   double? _estimatedDurationSeconds;
   double? _estimatedDistanceMeters;
+  int? _currentTripId;
 
   // Map configuration
   String _mapProvider = 'leaflet';
@@ -125,6 +126,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
           newBusPos = LatLng(busLat, busLng);
         }
 
+        final newTripId = res['trip_id'] as int?;
         setState(() {
           _isLoading = false;
           _errorMsg = '';
@@ -139,6 +141,18 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
           _mapProvider = res['map_provider'] ?? 'leaflet';
           _mapboxAccessToken = res['mapbox_access_token'] ?? '';
           _googleMapsApiKey = res['google_maps_api_key'] ?? '';
+
+          if (_currentTripId != newTripId) {
+            _currentTripId = newTripId;
+            _nextStopIndex = -1;
+            _routedPath = [];
+            _routedBusToStopPath = [];
+            _estimatedDurationSeconds = null;
+            _estimatedDistanceMeters = null;
+            _targetBusPosition = null;
+            _animatedBusPosition = null;
+            _oldBusPosition = null;
+          }
         });
 
         // Update visited stops progress dynamically
