@@ -534,8 +534,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
                             _tabController.animateTo(1);
                             Future.delayed(const Duration(milliseconds: 300), () {
                               _centerMapOnUser(
-                                member['latitude'] as double,
-                                member['longitude'] as double,
+                                (member['latitude'] as num).toDouble(),
+                                (member['longitude'] as num).toDouble(),
                               );
                               setState(() {
                                 _selectedMemberOnMap = member;
@@ -559,14 +559,14 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
     LatLng mapCenter = const LatLng(23.0225, 72.5714);
     if (activeMembers.isNotEmpty) {
       mapCenter = LatLng(
-        activeMembers.first['latitude'] as double,
-        activeMembers.first['longitude'] as double,
+        (activeMembers.first['latitude'] as num).toDouble(),
+        (activeMembers.first['longitude'] as num).toDouble(),
       );
     }
 
     final markers = activeMembers.map((member) {
-      final lat = member['latitude'] as double;
-      final lng = member['longitude'] as double;
+      final lat = (member['latitude'] as num).toDouble();
+      final lng = (member['longitude'] as num).toDouble();
 
       return Marker(
         point: LatLng(lat, lng),
@@ -705,8 +705,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
                       icon: Icon(Icons.my_location_rounded, color: theme.colorScheme.primary),
                       onPressed: () {
                         _centerMapOnUser(
-                          _selectedMemberOnMap!['latitude'] as double,
-                          _selectedMemberOnMap!['longitude'] as double,
+                          (_selectedMemberOnMap!['latitude'] as num).toDouble(),
+                          (_selectedMemberOnMap!['longitude'] as num).toDouble(),
                         );
                       },
                     ),
