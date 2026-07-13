@@ -197,8 +197,9 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
       final dateTime = DateTime.parse(timeStr).toLocal();
       final hour = dateTime.hour > 12 ? dateTime.hour - 12 : (dateTime.hour == 0 ? 12 : dateTime.hour);
       final min = dateTime.minute < 10 ? '0${dateTime.minute}' : '${dateTime.minute}';
+      final sec = dateTime.second < 10 ? '0${dateTime.second}' : '${dateTime.second}';
       final period = dateTime.hour >= 12 ? 'PM' : 'AM';
-      return '$hour:$min $period';
+      return '$hour:$min:$sec $period';
     } catch (_) {
       return 'Offline';
     }
@@ -461,7 +462,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
                               const SizedBox(height: 4),
                               Text(
                                 _isTracking ? _formatTime(_updatedAt) : 'Offline',
-                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
                               ),
                             ],
                           ),
