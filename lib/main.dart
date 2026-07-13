@@ -11,6 +11,7 @@ import 'screens/trip_details_screen.dart';
 import 'screens/child_track_screen.dart';
 import 'services/api_service.dart';
 import 'services/location_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -190,6 +191,14 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       setState(() {
         _isLoadingMore = false;
       });
+    }
+  }
+
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    if (phoneNumber.isEmpty) return;
+    final Uri launchUri = Uri.parse('tel:$phoneNumber');
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
     }
   }
 
@@ -1246,6 +1255,89 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                                     ),
                                                   ],
                                                 ),
+                                                if (child['active_subscription']['driver_name'] != null ||
+                                                    child['active_subscription']['attendant_name'] != null) ...[
+                                                  const SizedBox(height: 8),
+                                                  Divider(height: 1, color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+                                                  const SizedBox(height: 8),
+                                                  Row(
+                                                    children: [
+                                                      if (child['active_subscription']['driver_name'] != null)
+                                                        Expanded(
+                                                          child: Row(
+                                                            children: [
+                                                              CircleAvatar(
+                                                                radius: 12,
+                                                                backgroundColor: theme.colorScheme.primaryContainer,
+                                                                child: Icon(Icons.person_rounded, size: 12, color: theme.colorScheme.primary),
+                                                              ),
+                                                              const SizedBox(width: 6),
+                                                              Expanded(
+                                                                child: Column(
+                                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                                  children: [
+                                                                    const Text('Driver', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                                                    Text(
+                                                                      child['active_subscription']['driver_name'],
+                                                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                                                      maxLines: 1,
+                                                                      overflow: TextOverflow.ellipsis,
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                              if (child['active_subscription']['driver_phone'] != null &&
+                                                                  (child['active_subscription']['driver_phone'] as String).isNotEmpty)
+                                                                IconButton(
+                                                                  constraints: const BoxConstraints(),
+                                                                  padding: const EdgeInsets.all(4),
+                                                                  icon: const Icon(Icons.phone_rounded, color: Colors.green, size: 16),
+                                                                  onPressed: () => _makePhoneCall(child['active_subscription']['driver_phone']),
+                                                                ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      if (child['active_subscription']['driver_name'] != null &&
+                                                          child['active_subscription']['attendant_name'] != null)
+                                                        const SizedBox(width: 12),
+                                                      if (child['active_subscription']['attendant_name'] != null)
+                                                        Expanded(
+                                                          child: Row(
+                                                            children: [
+                                                              CircleAvatar(
+                                                                radius: 12,
+                                                                backgroundColor: theme.colorScheme.secondaryContainer,
+                                                                child: Icon(Icons.person_outline_rounded, size: 12, color: theme.colorScheme.secondary),
+                                                              ),
+                                                              const SizedBox(width: 6),
+                                                              Expanded(
+                                                                child: Column(
+                                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                                  children: [
+                                                                    const Text('Attendant', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                                                    Text(
+                                                                      child['active_subscription']['attendant_name'],
+                                                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                                                      maxLines: 1,
+                                                                      overflow: TextOverflow.ellipsis,
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                              if (child['active_subscription']['attendant_phone'] != null &&
+                                                                  (child['active_subscription']['attendant_phone'] as String).isNotEmpty)
+                                                                IconButton(
+                                                                  constraints: const BoxConstraints(),
+                                                                  padding: const EdgeInsets.all(4),
+                                                                  icon: const Icon(Icons.phone_rounded, color: Colors.green, size: 16),
+                                                                  onPressed: () => _makePhoneCall(child['active_subscription']['attendant_phone']),
+                                                                ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ],
                                               ],
                                             ),
                                           ),
@@ -1858,6 +1950,89 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                                   ),
                                                 ],
                                               ),
+                                              if (child['active_subscription']['driver_name'] != null ||
+                                                  child['active_subscription']['attendant_name'] != null) ...[
+                                                const SizedBox(height: 8),
+                                                Divider(height: 1, color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+                                                const SizedBox(height: 8),
+                                                Row(
+                                                  children: [
+                                                    if (child['active_subscription']['driver_name'] != null)
+                                                      Expanded(
+                                                        child: Row(
+                                                          children: [
+                                                            CircleAvatar(
+                                                              radius: 12,
+                                                              backgroundColor: theme.colorScheme.primaryContainer,
+                                                              child: Icon(Icons.person_rounded, size: 12, color: theme.colorScheme.primary),
+                                                            ),
+                                                            const SizedBox(width: 6),
+                                                            Expanded(
+                                                              child: Column(
+                                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                                children: [
+                                                                  const Text('Driver', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                                                  Text(
+                                                                    child['active_subscription']['driver_name'],
+                                                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                                                    maxLines: 1,
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            if (child['active_subscription']['driver_phone'] != null &&
+                                                                (child['active_subscription']['driver_phone'] as String).isNotEmpty)
+                                                              IconButton(
+                                                                constraints: const BoxConstraints(),
+                                                                padding: const EdgeInsets.all(4),
+                                                                icon: const Icon(Icons.phone_rounded, color: Colors.green, size: 16),
+                                                                onPressed: () => _makePhoneCall(child['active_subscription']['driver_phone']),
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    if (child['active_subscription']['driver_name'] != null &&
+                                                        child['active_subscription']['attendant_name'] != null)
+                                                      const SizedBox(width: 12),
+                                                    if (child['active_subscription']['attendant_name'] != null)
+                                                      Expanded(
+                                                        child: Row(
+                                                          children: [
+                                                            CircleAvatar(
+                                                              radius: 12,
+                                                              backgroundColor: theme.colorScheme.secondaryContainer,
+                                                              child: Icon(Icons.person_outline_rounded, size: 12, color: theme.colorScheme.secondary),
+                                                            ),
+                                                            const SizedBox(width: 6),
+                                                            Expanded(
+                                                              child: Column(
+                                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                                children: [
+                                                                  const Text('Attendant', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                                                  Text(
+                                                                    child['active_subscription']['attendant_name'],
+                                                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                                                    maxLines: 1,
+                                                                    overflow: TextOverflow.ellipsis,
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            if (child['active_subscription']['attendant_phone'] != null &&
+                                                                (child['active_subscription']['attendant_phone'] as String).isNotEmpty)
+                                                              IconButton(
+                                                                constraints: const BoxConstraints(),
+                                                                padding: const EdgeInsets.all(4),
+                                                                icon: const Icon(Icons.phone_rounded, color: Colors.green, size: 16),
+                                                                onPressed: () => _makePhoneCall(child['active_subscription']['attendant_phone']),
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              ],
                                             ],
                                           ),
                                         ),
