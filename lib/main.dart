@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -104,6 +105,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   bool _isGroupsLoading = true;
   String? _groupsError;
   bool _isLocationSharingOn = false;
+  Timer? _groupsTimer;
 
   @override
   void initState() {
@@ -121,6 +123,13 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     _performSearch('');
     _loadLocationSharingState();
     _fetchGroups();
+
+    // Live update groups list periodically every 10 seconds in the background
+    _groupsTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      if (mounted && _currentIndex == 0) {
+        _fetchGroups(silent: true);
+      }
+    });
   }
 
   @override
@@ -128,6 +137,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     _rotationController.dispose();
     _searchQueryController.dispose();
     _searchScrollController.dispose();
+    _groupsTimer?.cancel();
     super.dispose();
   }
 
@@ -304,11 +314,13 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     }
   }
 
-  Future<void> _fetchGroups() async {
-    setState(() {
-      _isGroupsLoading = true;
-      _groupsError = null;
-    });
+  Future<void> _fetchGroups({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _isGroupsLoading = true;
+        _groupsError = null;
+      });
+    }
     final res = await ApiService.getGroups();
     if (mounted) {
       setState(() {
@@ -316,9 +328,21 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         if (res['success'] == true) {
           _groups = res['groups'] ?? [];
         } else {
-          _groupsError = res['message'] ?? 'Failed to load groups.';
+          if (!silent) {
+            _groupsError = res['message'] ?? 'Failed to load groups.';
+          }
         }
       });
+    }
+  }
+
+  void _onTabChanged(int index) {
+    if (_currentIndex == index) return;
+    setState(() {
+      _currentIndex = index;
+    });
+    if (index == 0) {
+      _fetchGroups(silent: _groups.isNotEmpty);
     }
   }
 
@@ -4678,9 +4702,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   ),
                 ),
                 onTap: () {
-                  setState(() {
-                    _currentIndex = index;
-                  });
+                  _onTabChanged(index);
                   Navigator.pop(context); // Close the drawer
                 },
               ),
@@ -4702,9 +4724,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     return Expanded(
       child: InkWell(
         onTap: () {
-          setState(() {
-            _currentIndex = index;
-          });
+          _onTabChanged(index);
         },
         child: Column(
           mainAxisSize: MainAxisSize.min,
