@@ -146,6 +146,26 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
             _targetBusPosition = newBusPos;
             _animationController!.forward(from: 0.0);
           }
+
+          // Auto-adjust zoom level to show both the bus and the child's stop
+          final targetStop = _pickupStop ?? _dropStop;
+          if (targetStop != null) {
+            final stopLat = (targetStop['latitude'] as num?)?.toDouble();
+            final stopLng = (targetStop['longitude'] as num?)?.toDouble();
+            if (stopLat != null && stopLng != null) {
+              final pointsToFit = [newBusPos, LatLng(stopLat, stopLng)];
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _mapController.fitCamera(
+                    CameraFit.bounds(
+                      bounds: LatLngBounds.fromPoints(pointsToFit),
+                      padding: const EdgeInsets.only(top: 80, bottom: 80, left: 60, right: 60),
+                    ),
+                  );
+                }
+              });
+            }
+          }
         }
       } else {
         setState(() {
