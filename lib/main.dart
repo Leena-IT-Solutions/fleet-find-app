@@ -1414,16 +1414,154 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
+  Widget _buildHomeTripsSection(ThemeData theme, List<dynamic> trips, String roleName) {
+    if (trips.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '$roleName Duty Control',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: LocationService().isTracking ? Colors.red.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: LocationService().isTracking ? Colors.red : Colors.grey,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      LocationService().isTracking ? 'LIVE NOW' : 'OFFLINE',
+                      style: TextStyle(
+                        color: LocationService().isTracking ? Colors.red : Colors.grey.shade600,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...trips.map((dynamic t) {
+            final tripId = t['id'] as int;
+            final isCurrentTripTracking = LocationService().isTracking && LocationService().activeTripId == tripId;
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: isCurrentTripTracking
+                      ? Colors.green.withOpacity(0.5)
+                      : theme.colorScheme.outlineVariant.withOpacity(0.3),
+                  width: isCurrentTripTracking ? 1.5 : 1,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: isCurrentTripTracking
+                          ? Colors.green.withOpacity(0.1)
+                          : theme.colorScheme.primaryContainer.withOpacity(0.3),
+                      child: Icon(
+                        Icons.directions_bus_rounded,
+                        color: isCurrentTripTracking ? Colors.green : theme.colorScheme.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t['name'] ?? 'N/A',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            t['organization'] ?? 'N/A',
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _isTripToggling
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Switch.adaptive(
+                            value: isCurrentTripTracking,
+                            activeColor: Colors.green,
+                            onChanged: (val) {
+                              _toggleTripTracking(tripId, isCurrentTripTracking);
+                            },
+                          ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+          const SizedBox(height: 12),
+          Divider(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+          const SizedBox(height: 12),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHomePage(ThemeData theme, String userName, String userEmail) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: ApiService.getChildren(),
+    final roles = _user != null && _user!['roles'] != null
+        ? List<String>.from(_user!['roles'])
+        : <String>[];
+    final isDriver = roles.contains('Driver');
+    final isAttendant = roles.contains('Attendant');
+
+    return FutureBuilder<List<dynamic>>(
+      future: Future.wait([
+        ApiService.getChildren(),
+        isDriver ? ApiService.getDriverTrips() : Future.value(<String, dynamic>{'success': true, 'trips': []}),
+        isAttendant ? ApiService.getAttendantTrips() : Future.value(<String, dynamic>{'success': true, 'trips': []}),
+      ]),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (snapshot.hasError || snapshot.data == null || snapshot.data!['success'] == false) {
-          final errorMsg = snapshot.data?['message'] ?? 'Failed to load children.';
+        if (snapshot.hasError || snapshot.data == null) {
+          final errorMsg = 'Failed to load dashboard details.';
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -1433,7 +1571,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   Icon(Icons.error_outline_rounded, size: 64, color: theme.colorScheme.error),
                   const SizedBox(height: 16),
                   Text(
-                    'Error Loading Children',
+                    'Error Loading Dashboard',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: theme.colorScheme.error),
                   ),
                   const SizedBox(height: 8),
@@ -1454,9 +1592,17 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           );
         }
 
-        final childrenList = (snapshot.data!['children'] as List?) ?? [];
+        final childrenRes = snapshot.data![0] as Map<String, dynamic>;
+        final driverRes = snapshot.data![1] as Map<String, dynamic>;
+        final attendantRes = snapshot.data![2] as Map<String, dynamic>;
 
-        if (childrenList.isEmpty) {
+        final childrenList = (childrenRes['children'] as List?) ?? [];
+        final driverTrips = (driverRes['trips'] as List?) ?? [];
+        final attendantTrips = (attendantRes['trips'] as List?) ?? [];
+
+        final bool hasAnyDutySection = (isDriver && driverTrips.isNotEmpty) || (isAttendant && attendantTrips.isNotEmpty);
+
+        if (childrenList.isEmpty && !hasAnyDutySection) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(32.0),
@@ -1492,242 +1638,287 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          itemCount: childrenList.length,
-          itemBuilder: (context, index) {
-            final child = childrenList[index];
-            final dobStr = child['dob'] as String?;
-            final gender = child['gender'] as String?;
-            final childPhoto = child['photo'] as String?;
-
-            // Age calculation helper
-            String ageInfo = '';
-            if (dobStr != null && dobStr.isNotEmpty) {
-              try {
-                final dob = DateTime.parse(dobStr);
-                final now = DateTime.now();
-                int age = now.year - dob.year;
-                if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
-                  age--;
-                }
-                ageInfo = age > 0 ? '$age Years Old' : 'Infant';
-              } catch (_) {}
-            }
-
-            return Card(
-              margin: const EdgeInsets.only(bottom: 16),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
-              ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () async {
-                  final result = await Navigator.pushNamed(
-                    context,
-                    '/child-track',
-                    arguments: child,
-                  );
-                  if (result == true) {
-                    setState(() {});
-                  }
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundColor: theme.colorScheme.primaryContainer,
-                        backgroundImage: childPhoto != null && childPhoto.isNotEmpty && childPhoto.startsWith('http')
-                            ? NetworkImage(childPhoto)
-                            : null,
-                        child: childPhoto == null || childPhoto.isEmpty || !childPhoto.startsWith('http')
-                            ? Icon(
-                                Icons.face_rounded,
-                                size: 32,
-                                color: theme.colorScheme.primary,
-                              )
-                            : null,
+        return RefreshIndicator(
+          onRefresh: () async {
+            setState(() {});
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isDriver && driverTrips.isNotEmpty)
+                  _buildHomeTripsSection(theme, driverTrips, 'Driver'),
+                if (isAttendant && attendantTrips.isNotEmpty)
+                  _buildHomeTripsSection(theme, attendantTrips, 'Attendant'),
+                if (childrenList.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Text(
+                      'My Children',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              child['name'] ?? 'N/A',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    itemCount: childrenList.length,
+                    itemBuilder: (context, index) {
+                      final child = childrenList[index];
+                      final dobStr = child['dob'] as String?;
+                      final gender = child['gender'] as String?;
+                      final childPhoto = child['photo'] as String?;
+
+                      // Age calculation helper
+                      String ageInfo = '';
+                      if (dobStr != null && dobStr.isNotEmpty) {
+                        try {
+                          final dob = DateTime.parse(dobStr);
+                          final now = DateTime.now();
+                          int age = now.year - dob.year;
+                          if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+                            age--;
+                          }
+                          ageInfo = age > 0 ? '$age Years Old' : 'Infant';
+                        } catch (_) {}
+                      }
+
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () async {
+                            final result = await Navigator.pushNamed(
+                              context,
+                              '/child-track',
+                              arguments: child,
+                            );
+                            if (result == true) {
+                              setState(() {});
+                            }
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Row(
                               children: [
-                                if (ageInfo.isNotEmpty) ...[
-                                  Text(
-                                    ageInfo,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                ],
-                                if (gender != null && gender.isNotEmpty)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.primaryContainer.withOpacity(0.4),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      gender,
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                        color: theme.colorScheme.onPrimaryContainer,
+                                CircleAvatar(
+                                  radius: 30,
+                                  backgroundColor: theme.colorScheme.primaryContainer,
+                                  backgroundImage: childPhoto != null && childPhoto.isNotEmpty && childPhoto.startsWith('http')
+                                      ? NetworkImage(childPhoto)
+                                      : null,
+                                  child: childPhoto == null || childPhoto.isEmpty || !childPhoto.startsWith('http')
+                                      ? Icon(
+                                          Icons.face_rounded,
+                                          size: 32,
+                                          color: theme.colorScheme.primary,
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        child['name'] ?? 'N/A',
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                       ),
-                                    ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          if (ageInfo.isNotEmpty) ...[
+                                            Text(
+                                              ageInfo,
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                          ],
+                                          if (gender != null && gender.isNotEmpty)
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                gender,
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: theme.colorScheme.onPrimaryContainer,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      if (child['active_subscription'] != null) ...[
+                                        Container(
+                                          margin: const EdgeInsets.only(top: 6),
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                            color: theme.brightness == Brightness.dark
+                                                ? Colors.blueGrey.shade900.withOpacity(0.4)
+                                                : Colors.blue.shade50.withOpacity(0.5),
+                                            borderRadius: BorderRadius.circular(12),
+                                            border: Border.all(
+                                              color: theme.brightness == Brightness.dark
+                                                  ? Colors.blueGrey.shade800
+                                                  : Colors.blue.shade100.withOpacity(0.5),
+                                            ),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Icon(Icons.school_rounded, size: 14, color: theme.colorScheme.primary),
+                                                  const SizedBox(width: 6),
+                                                  Expanded(
+                                                    child: Text(
+                                                      child['active_subscription']['school_name'] ?? 'N/A',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: theme.colorScheme.onSurface,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Row(
+                                                children: [
+                                                  Icon(Icons.route_rounded, size: 14, color: theme.colorScheme.secondary),
+                                                  const SizedBox(width: 6),
+                                                  Expanded(
+                                                    child: Text(
+                                                      child['active_subscription']['route_name'] ?? 'N/A',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.w600,
+                                                        color: theme.colorScheme.onSurfaceVariant,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Divider(height: 1, color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+                                              const SizedBox(height: 8),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Row(
+                                                      children: [
+                                                        const Icon(Icons.arrow_upward_rounded, size: 12, color: Colors.green),
+                                                        const SizedBox(width: 4),
+                                                        Expanded(
+                                                          child: Text(
+                                                            'Pickup: ${child['active_subscription']['pickup_stop'] ?? 'N/A'}',
+                                                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+                                                            maxLines: 1,
+                                                            overflow: TextOverflow.ellipsis,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Row(
+                                                      children: [
+                                                        const Icon(Icons.arrow_downward_rounded, size: 12, color: Colors.red),
+                                                        const SizedBox(width: 4),
+                                                        Expanded(
+                                                          child: Text(
+                                                            'Drop: ${child['active_subscription']['drop_stop'] ?? 'N/A'}',
+                                                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+                                                            maxLines: 1,
+                                                            overflow: TextOverflow.ellipsis,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ] else ...[
+                                        Container(
+                                          margin: const EdgeInsets.only(top: 6),
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                          decoration: BoxDecoration(
+                                            color: theme.brightness == Brightness.dark
+                                                ? Colors.grey.shade900.withOpacity(0.4)
+                                                : Colors.grey.shade100,
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(Icons.info_outline_rounded, size: 14, color: Colors.grey.shade600),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                'Has no active subscription',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: Colors.grey.shade600,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
+                                ),
+                                Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
                               ],
                             ),
-                            const SizedBox(height: 10),
-                            if (child['active_subscription'] != null) ...[
-                              Container(
-                                margin: const EdgeInsets.only(top: 6),
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: theme.brightness == Brightness.dark
-                                      ? Colors.blueGrey.shade900.withOpacity(0.4)
-                                      : Colors.blue.shade50.withOpacity(0.5),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: theme.brightness == Brightness.dark
-                                        ? Colors.blueGrey.shade800
-                                        : Colors.blue.shade100.withOpacity(0.5),
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Icons.school_rounded, size: 14, color: theme.colorScheme.primary),
-                                        const SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(
-                                            child['active_subscription']['school_name'] ?? 'N/A',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color: theme.colorScheme.onSurface,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        Icon(Icons.route_rounded, size: 14, color: theme.colorScheme.secondary),
-                                        const SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(
-                                            child['active_subscription']['route_name'] ?? 'N/A',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                              color: theme.colorScheme.onSurfaceVariant,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Divider(height: 1, color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Row(
-                                            children: [
-                                              const Icon(Icons.arrow_upward_rounded, size: 12, color: Colors.green),
-                                              const SizedBox(width: 4),
-                                              Expanded(
-                                                child: Text(
-                                                  'Pickup: ${child['active_subscription']['pickup_stop'] ?? 'N/A'}',
-                                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Row(
-                                            children: [
-                                              const Icon(Icons.arrow_downward_rounded, size: 12, color: Colors.red),
-                                              const SizedBox(width: 4),
-                                              Expanded(
-                                                child: Text(
-                                                  'Drop: ${child['active_subscription']['drop_stop'] ?? 'N/A'}',
-                                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ] else ...[
-                              Container(
-                                margin: const EdgeInsets.only(top: 6),
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: theme.brightness == Brightness.dark
-                                      ? Colors.grey.shade900.withOpacity(0.4)
-                                      : Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.info_outline_rounded, size: 14, color: Colors.grey.shade600),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Has no active subscription',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.grey.shade600,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ],
+                          ),
                         ),
-                      ),
-                      Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
-                    ],
+                      );
+                    },
                   ),
-                ),
-              ),
-            );
-          },
+                ],
+                if (childrenList.isEmpty && hasAnyDutySection) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    child: Center(
+                      child: TextButton.icon(
+                        onPressed: _showAddChildBottomSheet,
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: const Text('Add a Child for School Transit'),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         );
       },
     );
