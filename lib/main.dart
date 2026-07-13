@@ -1094,288 +1094,285 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                               },
                               child: Padding(
                                 padding: const EdgeInsets.all(16.0),
-                                child: Row(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                  CircleAvatar(
-                                    radius: 30,
-                                    backgroundColor: theme.colorScheme.primaryContainer,
-                                    backgroundImage: childPhoto != null && childPhoto.isNotEmpty && childPhoto.startsWith('http')
-                                        ? NetworkImage(childPhoto)
-                                        : null,
-                                    child: childPhoto == null || childPhoto.isEmpty || !childPhoto.startsWith('http')
-                                        ? Icon(
-                                            Icons.face_rounded,
-                                            size: 32,
-                                            color: theme.colorScheme.primary,
-                                          )
-                                        : null,
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                    Row(
                                       children: [
-                                        Text(
-                                          child['name'] ?? 'N/A',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                        CircleAvatar(
+                                          radius: 26,
+                                          backgroundColor: theme.colorScheme.primaryContainer,
+                                          backgroundImage: childPhoto != null && childPhoto.isNotEmpty && childPhoto.startsWith('http')
+                                              ? NetworkImage(childPhoto)
+                                              : null,
+                                          child: childPhoto == null || childPhoto.isEmpty || !childPhoto.startsWith('http')
+                                              ? Icon(
+                                                  Icons.face_rounded,
+                                                  size: 28,
+                                                  color: theme.colorScheme.primary,
+                                                )
+                                              : null,
                                         ),
-                                        const SizedBox(height: 6),
-                                        Row(
-                                          children: [
-                                            if (ageInfo.isNotEmpty) ...[
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
                                               Text(
-                                                ageInfo,
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  color: Colors.grey.shade600,
-                                                ),
+                                                child['name'] ?? 'N/A',
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                               ),
-                                              const SizedBox(width: 8),
-                                            ],
-                                            if (gender != null && gender.isNotEmpty)
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                                decoration: BoxDecoration(
-                                                  color: theme.colorScheme.primaryContainer.withOpacity(0.4),
-                                                  borderRadius: BorderRadius.circular(8),
-                                                ),
-                                                child: Text(
-                                                  gender,
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                    color: theme.colorScheme.primary,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                        if (dobStr != null && dobStr.isNotEmpty)
-                                          Text(
-                                            'DOB: $dobStr',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey.shade500,
-                                            ),
-                                          ),
-                                        const SizedBox(height: 10),
-                                        if (child['active_subscription'] != null) ...[
-                                          Container(
-                                            margin: const EdgeInsets.only(top: 6),
-                                            padding: const EdgeInsets.all(10),
-                                            decoration: BoxDecoration(
-                                              color: theme.brightness == Brightness.dark
-                                                  ? Colors.blueGrey.shade900.withOpacity(0.4)
-                                                  : Colors.blue.shade50.withOpacity(0.5),
-                                              borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color: theme.brightness == Brightness.dark
-                                                    ? Colors.blueGrey.shade800
-                                                    : Colors.blue.shade100.withOpacity(0.5),
-                                              ),
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Icon(Icons.school_rounded, size: 14, color: theme.colorScheme.primary),
-                                                    const SizedBox(width: 6),
-                                                    Expanded(
-                                                      child: Text(
-                                                        child['active_subscription']['school_name'] ?? 'N/A',
-                                                        style: TextStyle(
-                                                          fontSize: 12,
-                                                          fontWeight: FontWeight.bold,
-                                                          color: theme.colorScheme.onSurface,
-                                                        ),
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow.ellipsis,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 6),
-                                                Row(
-                                                  children: [
-                                                    Icon(Icons.route_rounded, size: 14, color: theme.colorScheme.secondary),
-                                                    const SizedBox(width: 6),
-                                                    Expanded(
-                                                      child: Text(
-                                                        child['active_subscription']['route_name'] ?? 'N/A',
-                                                        style: TextStyle(
-                                                          fontSize: 12,
-                                                          fontWeight: FontWeight.w600,
-                                                          color: theme.colorScheme.onSurfaceVariant,
-                                                        ),
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow.ellipsis,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 8),
-                                                Divider(height: 1, color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
-                                                const SizedBox(height: 8),
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Row(
-                                                        children: [
-                                                          const Icon(Icons.arrow_upward_rounded, size: 12, color: Colors.green),
-                                                          const SizedBox(width: 4),
-                                                          Expanded(
-                                                            child: Text(
-                                                              'Pickup: ${child['active_subscription']['pickup_stop'] ?? 'N/A'}',
-                                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-                                                              maxLines: 1,
-                                                              overflow: TextOverflow.ellipsis,
-                                                            ),
-                                                          ),
-                                                        ],
+                                              const SizedBox(height: 4),
+                                              Row(
+                                                children: [
+                                                  if (ageInfo.isNotEmpty) ...[
+                                                    Text(
+                                                      ageInfo,
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.grey.shade600,
                                                       ),
                                                     ),
                                                     const SizedBox(width: 8),
-                                                    Expanded(
-                                                      child: Row(
-                                                        children: [
-                                                          const Icon(Icons.arrow_downward_rounded, size: 12, color: Colors.red),
-                                                          const SizedBox(width: 4),
-                                                          Expanded(
-                                                            child: Text(
-                                                              'Drop: ${child['active_subscription']['drop_stop'] ?? 'N/A'}',
-                                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-                                                              maxLines: 1,
-                                                              overflow: TextOverflow.ellipsis,
-                                                            ),
-                                                          ),
-                                                        ],
+                                                  ],
+                                                  if (gender != null && gender.isNotEmpty)
+                                                    Container(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                      decoration: BoxDecoration(
+                                                        color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                                                        borderRadius: BorderRadius.circular(8),
+                                                      ),
+                                                      child: Text(
+                                                        gender,
+                                                        style: TextStyle(
+                                                          fontSize: 10,
+                                                          fontWeight: FontWeight.bold,
+                                                          color: theme.colorScheme.primary,
+                                                        ),
                                                       ),
                                                     ),
-                                                  ],
-                                                ),
-                                                if (child['active_subscription']['driver_name'] != null ||
-                                                    child['active_subscription']['attendant_name'] != null) ...[
-                                                  const SizedBox(height: 8),
-                                                  Divider(height: 1, color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
-                                                  const SizedBox(height: 8),
-                                                  Row(
-                                                    children: [
-                                                      if (child['active_subscription']['driver_name'] != null)
-                                                        Expanded(
-                                                          child: Row(
-                                                            children: [
-                                                              CircleAvatar(
-                                                                radius: 12,
-                                                                backgroundColor: theme.colorScheme.primaryContainer,
-                                                                child: Icon(Icons.person_rounded, size: 12, color: theme.colorScheme.primary),
-                                                              ),
-                                                              const SizedBox(width: 6),
-                                                              Expanded(
-                                                                child: Column(
-                                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                                  children: [
-                                                                    const Text('Driver', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                                                    Text(
-                                                                      child['active_subscription']['driver_name'],
-                                                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                                                      maxLines: 1,
-                                                                      overflow: TextOverflow.ellipsis,
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                              if (child['active_subscription']['driver_phone'] != null &&
-                                                                  (child['active_subscription']['driver_phone'] as String).isNotEmpty)
-                                                                IconButton(
-                                                                  constraints: const BoxConstraints(),
-                                                                  padding: const EdgeInsets.all(4),
-                                                                  icon: const Icon(Icons.phone_rounded, color: Colors.green, size: 16),
-                                                                  onPressed: () => _makePhoneCall(child['active_subscription']['driver_phone']),
-                                                                ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      if (child['active_subscription']['driver_name'] != null &&
-                                                          child['active_subscription']['attendant_name'] != null)
-                                                        const SizedBox(width: 12),
-                                                      if (child['active_subscription']['attendant_name'] != null)
-                                                        Expanded(
-                                                          child: Row(
-                                                            children: [
-                                                              CircleAvatar(
-                                                                radius: 12,
-                                                                backgroundColor: theme.colorScheme.secondaryContainer,
-                                                                child: Icon(Icons.person_outline_rounded, size: 12, color: theme.colorScheme.secondary),
-                                                              ),
-                                                              const SizedBox(width: 6),
-                                                              Expanded(
-                                                                child: Column(
-                                                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                                                  children: [
-                                                                    const Text('Attendant', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                                                    Text(
-                                                                      child['active_subscription']['attendant_name'],
-                                                                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                                                      maxLines: 1,
-                                                                      overflow: TextOverflow.ellipsis,
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                              if (child['active_subscription']['attendant_phone'] != null &&
-                                                                  (child['active_subscription']['attendant_phone'] as String).isNotEmpty)
-                                                                IconButton(
-                                                                  constraints: const BoxConstraints(),
-                                                                  padding: const EdgeInsets.all(4),
-                                                                  icon: const Icon(Icons.phone_rounded, color: Colors.green, size: 16),
-                                                                  onPressed: () => _makePhoneCall(child['active_subscription']['attendant_phone']),
-                                                                ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                    ],
-                                                  ),
                                                 ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+                                      ],
+                                    ),
+                                    if (dobStr != null && dobStr.isNotEmpty) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'DOB: $dobStr',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                      ),
+                                    ],
+                                    if (child['active_subscription'] != null) ...[
+                                      const SizedBox(height: 12),
+                                      Divider(height: 1, color: theme.colorScheme.outlineVariant.withOpacity(0.4)),
+                                      const SizedBox(height: 12),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Row(
+                                              children: [
+                                                Icon(Icons.school_rounded, size: 16, color: theme.colorScheme.primary),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    child['active_subscription']['school_name'] ?? 'N/A',
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
                                               ],
                                             ),
                                           ),
-                                        ] else ...[
-                                          Container(
-                                            margin: const EdgeInsets.only(top: 6),
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                            decoration: BoxDecoration(
-                                              color: theme.brightness == Brightness.dark
-                                                  ? Colors.grey.shade900.withOpacity(0.4)
-                                                  : Colors.grey.shade100,
-                                              borderRadius: BorderRadius.circular(8),
-                                            ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
                                             child: Row(
-                                              mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Icon(Icons.info_outline_rounded, size: 14, color: Colors.grey.shade600),
-                                                const SizedBox(width: 6),
-                                                Text(
-                                                  'Has no active subscription',
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                    color: Colors.grey.shade600,
-                                                    fontWeight: FontWeight.w500,
+                                                Icon(Icons.route_rounded, size: 16, color: theme.colorScheme.secondary),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    child['active_subscription']['route_name'] ?? 'N/A',
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
                                                   ),
                                                 ),
                                               ],
                                             ),
                                           ),
                                         ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Row(
+                                              children: [
+                                                const Icon(Icons.arrow_upward_rounded, size: 14, color: Colors.green),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Text(
+                                                    'Pickup: ${child['active_subscription']['pickup_stop'] ?? 'N/A'}',
+                                                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Row(
+                                              children: [
+                                                const Icon(Icons.arrow_downward_rounded, size: 14, color: Colors.red),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Text(
+                                                    'Drop: ${child['active_subscription']['drop_stop'] ?? 'N/A'}',
+                                                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (child['active_subscription']['driver_name'] != null ||
+                                          child['active_subscription']['attendant_name'] != null) ...[
+                                        const SizedBox(height: 12),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: theme.brightness == Brightness.dark
+                                                ? Colors.grey.shade900.withOpacity(0.5)
+                                                : Colors.grey.shade50,
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(
+                                              color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              if (child['active_subscription']['driver_name'] != null)
+                                                Expanded(
+                                                  child: Row(
+                                                    children: [
+                                                      CircleAvatar(
+                                                        radius: 12,
+                                                        backgroundColor: theme.colorScheme.primaryContainer,
+                                                        child: Icon(Icons.person_rounded, size: 12, color: theme.colorScheme.primary),
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            const Text('Driver', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                                                            Text(
+                                                              child['active_subscription']['driver_name'],
+                                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                                                              maxLines: 1,
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      if (child['active_subscription']['driver_phone'] != null &&
+                                                          (child['active_subscription']['driver_phone'] as String).isNotEmpty)
+                                                        IconButton(
+                                                          constraints: const BoxConstraints(),
+                                                          padding: const EdgeInsets.all(4),
+                                                          icon: const Icon(Icons.phone_rounded, color: Colors.green, size: 16),
+                                                          onPressed: () => _makePhoneCall(child['active_subscription']['driver_phone']),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              if (child['active_subscription']['driver_name'] != null &&
+                                                  child['active_subscription']['attendant_name'] != null)
+                                                Container(
+                                                  height: 24,
+                                                  width: 1,
+                                                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                                                  color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                                                ),
+                                              if (child['active_subscription']['attendant_name'] != null)
+                                                Expanded(
+                                                  child: Row(
+                                                    children: [
+                                                      CircleAvatar(
+                                                        radius: 12,
+                                                        backgroundColor: theme.colorScheme.secondaryContainer,
+                                                        child: Icon(Icons.person_outline_rounded, size: 12, color: theme.colorScheme.secondary),
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      Expanded(
+                                                        child: Column(
+                                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                                          children: [
+                                                            const Text('Attendant', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                                                            Text(
+                                                              child['active_subscription']['attendant_name'],
+                                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                                                              maxLines: 1,
+                                                              overflow: TextOverflow.ellipsis,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      if (child['active_subscription']['attendant_phone'] != null &&
+                                                          (child['active_subscription']['attendant_phone'] as String).isNotEmpty)
+                                                        IconButton(
+                                                          constraints: const BoxConstraints(),
+                                                          padding: const EdgeInsets.all(4),
+                                                          icon: const Icon(Icons.phone_rounded, color: Colors.green, size: 16),
+                                                          onPressed: () => _makePhoneCall(child['active_subscription']['attendant_phone']),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
                                       ],
-                                    ),
-                                  ),
-                                  Icon(Icons.chevron_right_rounded, color: Colors.grey.shade600),
-                                ],
+                                    ] else ...[
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          Icon(Icons.info_outline_rounded, size: 14, color: Colors.grey.shade500),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            'Has no active subscription',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade600,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
                               ),
                             ),
-                           ),
                           );
                         },
                       ),
@@ -1798,275 +1795,271 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                           },
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
-                            child: Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                CircleAvatar(
-                                  radius: 30,
-                                  backgroundColor: theme.colorScheme.primaryContainer,
-                                  backgroundImage: childPhoto != null && childPhoto.isNotEmpty && childPhoto.startsWith('http')
-                                      ? NetworkImage(childPhoto)
-                                      : null,
-                                  child: childPhoto == null || childPhoto.isEmpty || !childPhoto.startsWith('http')
-                                      ? Icon(
-                                          Icons.face_rounded,
-                                          size: 32,
-                                          color: theme.colorScheme.primary,
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        child['name'] ?? 'N/A',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Row(
+                                Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 26,
+                                      backgroundColor: theme.colorScheme.primaryContainer,
+                                      backgroundImage: childPhoto != null && childPhoto.isNotEmpty && childPhoto.startsWith('http')
+                                          ? NetworkImage(childPhoto)
+                                          : null,
+                                      child: childPhoto == null || childPhoto.isEmpty || !childPhoto.startsWith('http')
+                                          ? Icon(
+                                              Icons.face_rounded,
+                                              size: 28,
+                                              color: theme.colorScheme.primary,
+                                            )
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          if (ageInfo.isNotEmpty) ...[
-                                            Text(
-                                              ageInfo,
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                color: Colors.grey.shade600,
+                                          Text(
+                                            child['name'] ?? 'N/A',
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            children: [
+                                              if (ageInfo.isNotEmpty) ...[
+                                                Text(
+                                                  ageInfo,
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.grey.shade600,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                              ],
+                                              if (gender != null && gender.isNotEmpty)
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                  decoration: BoxDecoration(
+                                                    color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                  child: Text(
+                                                    gender,
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: theme.colorScheme.primary,
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+                                  ],
+                                ),
+                                if (child['active_subscription'] != null) ...[
+                                  const SizedBox(height: 12),
+                                  Divider(height: 1, color: theme.colorScheme.outlineVariant.withOpacity(0.4)),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.school_rounded, size: 16, color: theme.colorScheme.primary),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text(
+                                                child['active_subscription']['school_name'] ?? 'N/A',
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
-                                            const SizedBox(width: 8),
                                           ],
-                                          if (gender != null && gender.isNotEmpty)
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: theme.colorScheme.primaryContainer.withOpacity(0.4),
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.route_rounded, size: 16, color: theme.colorScheme.secondary),
+                                            const SizedBox(width: 8),
+                                            Expanded(
                                               child: Text(
-                                                gender,
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: theme.colorScheme.onPrimaryContainer,
+                                                child['active_subscription']['route_name'] ?? 'N/A',
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
                                                 ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.arrow_upward_rounded, size: 14, color: Colors.green),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: Text(
+                                                'Pickup: ${child['active_subscription']['pickup_stop'] ?? 'N/A'}',
+                                                style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.arrow_downward_rounded, size: 14, color: Colors.red),
+                                            const SizedBox(width: 6),
+                                            Expanded(
+                                              child: Text(
+                                                'Drop: ${child['active_subscription']['drop_stop'] ?? 'N/A'}',
+                                                style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (child['active_subscription']['driver_name'] != null ||
+                                      child['active_subscription']['attendant_name'] != null) ...[
+                                    const SizedBox(height: 12),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: theme.brightness == Brightness.dark
+                                            ? Colors.grey.shade900.withOpacity(0.5)
+                                            : Colors.grey.shade50,
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          if (child['active_subscription']['driver_name'] != null)
+                                            Expanded(
+                                              child: Row(
+                                                children: [
+                                                  CircleAvatar(
+                                                    radius: 12,
+                                                    backgroundColor: theme.colorScheme.primaryContainer,
+                                                    child: Icon(Icons.person_rounded, size: 12, color: theme.colorScheme.primary),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        const Text('Driver', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                                                        Text(
+                                                          child['active_subscription']['driver_name'],
+                                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  if (child['active_subscription']['driver_phone'] != null &&
+                                                      (child['active_subscription']['driver_phone'] as String).isNotEmpty)
+                                                    IconButton(
+                                                      constraints: const BoxConstraints(),
+                                                      padding: const EdgeInsets.all(4),
+                                                      icon: const Icon(Icons.phone_rounded, color: Colors.green, size: 16),
+                                                      onPressed: () => _makePhoneCall(child['active_subscription']['driver_phone']),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                          if (child['active_subscription']['driver_name'] != null &&
+                                              child['active_subscription']['attendant_name'] != null)
+                                            Container(
+                                              height: 24,
+                                              width: 1,
+                                              margin: const EdgeInsets.symmetric(horizontal: 8),
+                                              color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                                            ),
+                                          if (child['active_subscription']['attendant_name'] != null)
+                                            Expanded(
+                                              child: Row(
+                                                children: [
+                                                  CircleAvatar(
+                                                    radius: 12,
+                                                    backgroundColor: theme.colorScheme.secondaryContainer,
+                                                    child: Icon(Icons.person_outline_rounded, size: 12, color: theme.colorScheme.secondary),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        const Text('Attendant', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                                                        Text(
+                                                          child['active_subscription']['attendant_name'],
+                                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  if (child['active_subscription']['attendant_phone'] != null &&
+                                                      (child['active_subscription']['attendant_phone'] as String).isNotEmpty)
+                                                    IconButton(
+                                                      constraints: const BoxConstraints(),
+                                                      padding: const EdgeInsets.all(4),
+                                                      icon: const Icon(Icons.phone_rounded, color: Colors.green, size: 16),
+                                                      onPressed: () => _makePhoneCall(child['active_subscription']['attendant_phone']),
+                                                    ),
+                                                ],
                                               ),
                                             ),
                                         ],
                                       ),
-                                      const SizedBox(height: 10),
-                                      if (child['active_subscription'] != null) ...[
-                                        Container(
-                                          margin: const EdgeInsets.only(top: 6),
-                                          padding: const EdgeInsets.all(10),
-                                          decoration: BoxDecoration(
-                                            color: theme.brightness == Brightness.dark
-                                                ? Colors.blueGrey.shade900.withOpacity(0.4)
-                                                : Colors.blue.shade50.withOpacity(0.5),
-                                            borderRadius: BorderRadius.circular(12),
-                                            border: Border.all(
-                                              color: theme.brightness == Brightness.dark
-                                                  ? Colors.blueGrey.shade800
-                                                  : Colors.blue.shade100.withOpacity(0.5),
-                                            ),
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Icon(Icons.school_rounded, size: 14, color: theme.colorScheme.primary),
-                                                  const SizedBox(width: 6),
-                                                  Expanded(
-                                                    child: Text(
-                                                      child['active_subscription']['school_name'] ?? 'N/A',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.bold,
-                                                        color: theme.colorScheme.onSurface,
-                                                      ),
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 6),
-                                              Row(
-                                                children: [
-                                                  Icon(Icons.route_rounded, size: 14, color: theme.colorScheme.secondary),
-                                                  const SizedBox(width: 6),
-                                                  Expanded(
-                                                    child: Text(
-                                                      child['active_subscription']['route_name'] ?? 'N/A',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w600,
-                                                        color: theme.colorScheme.onSurfaceVariant,
-                                                      ),
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Divider(height: 1, color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
-                                              const SizedBox(height: 8),
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: Row(
-                                                      children: [
-                                                        const Icon(Icons.arrow_upward_rounded, size: 12, color: Colors.green),
-                                                        const SizedBox(width: 4),
-                                                        Expanded(
-                                                          child: Text(
-                                                            'Pickup: ${child['active_subscription']['pickup_stop'] ?? 'N/A'}',
-                                                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-                                                            maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Expanded(
-                                                    child: Row(
-                                                      children: [
-                                                        const Icon(Icons.arrow_downward_rounded, size: 12, color: Colors.red),
-                                                        const SizedBox(width: 4),
-                                                        Expanded(
-                                                          child: Text(
-                                                            'Drop: ${child['active_subscription']['drop_stop'] ?? 'N/A'}',
-                                                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
-                                                            maxLines: 1,
-                                                            overflow: TextOverflow.ellipsis,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              if (child['active_subscription']['driver_name'] != null ||
-                                                  child['active_subscription']['attendant_name'] != null) ...[
-                                                const SizedBox(height: 8),
-                                                Divider(height: 1, color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
-                                                const SizedBox(height: 8),
-                                                Row(
-                                                  children: [
-                                                    if (child['active_subscription']['driver_name'] != null)
-                                                      Expanded(
-                                                        child: Row(
-                                                          children: [
-                                                            CircleAvatar(
-                                                              radius: 12,
-                                                              backgroundColor: theme.colorScheme.primaryContainer,
-                                                              child: Icon(Icons.person_rounded, size: 12, color: theme.colorScheme.primary),
-                                                            ),
-                                                            const SizedBox(width: 6),
-                                                            Expanded(
-                                                              child: Column(
-                                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                                children: [
-                                                                  const Text('Driver', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                                                  Text(
-                                                                    child['active_subscription']['driver_name'],
-                                                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                                                    maxLines: 1,
-                                                                    overflow: TextOverflow.ellipsis,
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                            if (child['active_subscription']['driver_phone'] != null &&
-                                                                (child['active_subscription']['driver_phone'] as String).isNotEmpty)
-                                                              IconButton(
-                                                                constraints: const BoxConstraints(),
-                                                                padding: const EdgeInsets.all(4),
-                                                                icon: const Icon(Icons.phone_rounded, color: Colors.green, size: 16),
-                                                                onPressed: () => _makePhoneCall(child['active_subscription']['driver_phone']),
-                                                              ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    if (child['active_subscription']['driver_name'] != null &&
-                                                        child['active_subscription']['attendant_name'] != null)
-                                                      const SizedBox(width: 12),
-                                                    if (child['active_subscription']['attendant_name'] != null)
-                                                      Expanded(
-                                                        child: Row(
-                                                          children: [
-                                                            CircleAvatar(
-                                                              radius: 12,
-                                                              backgroundColor: theme.colorScheme.secondaryContainer,
-                                                              child: Icon(Icons.person_outline_rounded, size: 12, color: theme.colorScheme.secondary),
-                                                            ),
-                                                            const SizedBox(width: 6),
-                                                            Expanded(
-                                                              child: Column(
-                                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                                children: [
-                                                                  const Text('Attendant', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                                                                  Text(
-                                                                    child['active_subscription']['attendant_name'],
-                                                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                                                                    maxLines: 1,
-                                                                    overflow: TextOverflow.ellipsis,
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                            if (child['active_subscription']['attendant_phone'] != null &&
-                                                                (child['active_subscription']['attendant_phone'] as String).isNotEmpty)
-                                                              IconButton(
-                                                                constraints: const BoxConstraints(),
-                                                                padding: const EdgeInsets.all(4),
-                                                                icon: const Icon(Icons.phone_rounded, color: Colors.green, size: 16),
-                                                                onPressed: () => _makePhoneCall(child['active_subscription']['attendant_phone']),
-                                                              ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ],
-                                          ),
+                                    ),
+                                  ],
+                                ] else ...[
+                                  const SizedBox(height: 10),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.info_outline_rounded, size: 14, color: Colors.grey.shade500),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Has no active subscription',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade600,
+                                          fontWeight: FontWeight.w500,
                                         ),
-                                      ] else ...[
-                                        Container(
-                                          margin: const EdgeInsets.only(top: 6),
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                          decoration: BoxDecoration(
-                                            color: theme.brightness == Brightness.dark
-                                                ? Colors.grey.shade900.withOpacity(0.4)
-                                                : Colors.grey.shade100,
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.info_outline_rounded, size: 14, color: Colors.grey.shade600),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                'Has no active subscription',
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  color: Colors.grey.shade600,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                                      ),
                                     ],
                                   ),
-                                ),
-                                Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+                                ],
                               ],
                             ),
                           ),
