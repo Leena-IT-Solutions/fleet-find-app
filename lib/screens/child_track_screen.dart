@@ -34,6 +34,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
   List<LatLng> _routedBusToStopPath = [];
   bool _isFetchingRoute = false;
   double _busRotation = 0.0;
+  int _nextStopIndex = -1;
 
   // Map configuration
   String _mapProvider = 'leaflet';
@@ -137,6 +138,37 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
           _mapboxAccessToken = res['mapbox_access_token'] ?? '';
           _googleMapsApiKey = res['google_maps_api_key'] ?? '';
         });
+
+        // Update visited stops progress dynamically
+        if (newBusPos != null && parsedStops.isNotEmpty) {
+          if (_nextStopIndex == -1) {
+            int closestIdx = 0;
+            double minDst = double.maxFinite;
+            for (int i = 0; i < parsedStops.length; i++) {
+              final dst = _calculateDistance(newBusPos, parsedStops[i]);
+              if (dst < minDst) {
+                minDst = dst;
+                closestIdx = i;
+              }
+            }
+
+            // If close to this stop (within 600m), assume mid-route starting point
+            if (minDst < 600) {
+              _nextStopIndex = closestIdx;
+            } else {
+              // Otherwise, assume starting from depot before first stop
+              _nextStopIndex = 0;
+            }
+          } else {
+            // Arrived/passed the next expected stop in sequence
+            if (_nextStopIndex < parsedStops.length) {
+              final dst = _calculateDistance(newBusPos, parsedStops[_nextStopIndex]);
+              if (dst < 250) {
+                _nextStopIndex++;
+              }
+            }
+          }
+        }
 
         _fetchRoutes();
 
@@ -259,9 +291,11 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
           }
 
           final List<LatLng> pointsToRoute = [busPos];
-          if (targetStopIndex != -1 && closestStopIndex < targetStopIndex) {
-            // Bus is before the target stop. Route through intermediate stops on the way to target stop
-            pointsToRoute.addAll(_stopsPoints.sublist(closestStopIndex + 1, targetStopIndex + 1));
+          final startIndex = (_nextStopIndex >= 0) ? _nextStopIndex : closestStopIndex;
+
+          if (targetStopIndex != -1 && startIndex <= targetStopIndex) {
+            // Route from bus, through the next expected stop, up to target stop
+            pointsToRoute.addAll(_stopsPoints.sublist(startIndex, targetStopIndex + 1));
           } else {
             // Fallback or bus has passed target stop
             pointsToRoute.add(LatLng(stopLat, stopLng));
@@ -318,6 +352,24 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
     } catch (_) {
       return 'Offline';
     }
+  }
+
+  double _calculateDistance(LatLng p1, LatLng p2) {
+    const double earthRadius = 6371000; // in meters
+    final double lat1 = p1.latitude * math.pi / 180;
+    final double lat2 = p2.latitude * math.pi / 180;
+    final double lon1 = p1.longitude * math.pi / 180;
+    final double lon2 = p2.longitude * math.pi / 180;
+
+    final double dLat = lat2 - lat1;
+    final double dLon = lon2 - lon1;
+
+    final double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1) * math.cos(lat2) *
+        math.sin(dLon / 2) * math.sin(dLon / 2);
+    final double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+
+    return earthRadius * c;
   }
 
   double _calculateBearing(LatLng start, LatLng end) {
@@ -486,17 +538,17 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
       polylines.add(
         Polyline(
           points: _routedPath,
-          color: Colors.blue.withOpacity(0.6),
-          strokeWidth: 4.0,
+          color: Colors.black87,
+          strokeWidth: 4.5,
         ),
       );
     } else if (_stopsPoints.isNotEmpty) {
-      // Fallback to straight line stops sequence (blue)
+      // Fallback to straight line stops sequence (black)
       polylines.add(
         Polyline(
           points: _stopsPoints,
-          color: Colors.blue.withOpacity(0.6),
-          strokeWidth: 4.0,
+          color: Colors.black87,
+          strokeWidth: 4.5,
         ),
       );
     }
@@ -511,8 +563,8 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
           polylines.add(
             Polyline(
               points: _routedBusToStopPath,
-              color: Colors.amber.shade700,
-              strokeWidth: 3.5,
+              color: Colors.orange.shade800,
+              strokeWidth: 4.0,
             ),
           );
         } else {
@@ -520,8 +572,8 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
           polylines.add(
             Polyline(
               points: [_animatedBusPosition!, LatLng(stopLat, stopLng)],
-              color: Colors.amber.shade700,
-              strokeWidth: 3.5,
+              color: Colors.orange.shade800,
+              strokeWidth: 4.0,
             ),
           );
         }
