@@ -248,14 +248,18 @@ void onStart(ServiceInstance service) async {
   Future<void> fetchAndSend() async {
     if (tripId == 0) return;
     try {
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 5,
-        ),
-      );
+      Position? position;
+      try {
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          ),
+        ).timeout(const Duration(seconds: 5));
+      } catch (_) {
+        position = await Geolocator.getLastKnownPosition();
+      }
 
-      if (baseUrl.isNotEmpty && token.isNotEmpty) {
+      if (position != null && baseUrl.isNotEmpty && token.isNotEmpty) {
         final url = Uri.parse('$baseUrl/trip/$tripId/location');
         await http.post(
           url,
@@ -296,8 +300,7 @@ void onStart(ServiceInstance service) async {
 
   // Periodically fetch and push coordinates
   Timer.periodic(Duration(seconds: interval), (timer) async {
-    final isRunning = await FlutterBackgroundService().isRunning();
-    if (!isRunning || tripId == 0) {
+    if (tripId == 0) {
       timer.cancel();
       return;
     }

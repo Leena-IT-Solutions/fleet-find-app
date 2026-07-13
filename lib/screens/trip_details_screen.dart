@@ -35,9 +35,9 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     _updateSubscription = FlutterBackgroundService().on('update').listen((event) {
       if (event != null && mounted) {
         setState(() {
-          _currentLat = event['latitude'] as double?;
-          _currentLng = event['longitude'] as double?;
-          _currentSpeed = event['speed'] as double?;
+          _currentLat = (event['latitude'] as num?)?.toDouble();
+          _currentLng = (event['longitude'] as num?)?.toDouble();
+          _currentSpeed = (event['speed'] as num?)?.toDouble();
           _lastUpdated = DateTime.tryParse(event['time'] ?? '');
         });
       }
