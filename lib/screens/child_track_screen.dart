@@ -35,6 +35,8 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
   bool _isFetchingRoute = false;
   double _busRotation = 0.0;
   int _nextStopIndex = -1;
+  double? _estimatedDurationSeconds;
+  double? _estimatedDistanceMeters;
 
   // Map configuration
   String _mapProvider = 'leaflet';
@@ -301,27 +303,48 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
             pointsToRoute.add(LatLng(stopLat, stopLng));
           }
 
-          final coordString = pointsToRoute.map((p) => '${p.longitude},${p.latitude}').join(';');
-          final url = Uri.parse('https://router.project-osrm.org/route/v1/driving/$coordString?overview=full&geometries=geojson');
-          final response = await http.get(url).timeout(const Duration(seconds: 5));
-          if (response.statusCode == 200) {
-            final data = json.decode(response.body);
-            final routes = data['routes'] as List?;
-            if (routes != null && routes.isNotEmpty) {
-              final geometry = routes[0]['geometry'] as Map<String, dynamic>?;
-              final coords = geometry?['coordinates'] as List?;
-              if (coords != null) {
-                final List<LatLng> path = [];
-                for (var c in coords) {
-                  final lng = (c[0] as num).toDouble();
-                  final lat = (c[1] as num).toDouble();
-                  path.add(LatLng(lat, lng));
+          try {
+            final coordString = pointsToRoute.map((p) => '${p.longitude},${p.latitude}').join(';');
+            final url = Uri.parse('https://router.project-osrm.org/route/v1/driving/$coordString?overview=full&geometries=geojson');
+            final response = await http.get(url).timeout(const Duration(seconds: 4));
+            if (response.statusCode == 200) {
+              final data = json.decode(response.body);
+              final routes = data['routes'] as List?;
+              if (routes != null && routes.isNotEmpty) {
+                final duration = (routes[0]['duration'] as num?)?.toDouble();
+                final distance = (routes[0]['distance'] as num?)?.toDouble();
+                final geometry = routes[0]['geometry'] as Map<String, dynamic>?;
+                final coords = geometry?['coordinates'] as List?;
+                if (coords != null) {
+                  final List<LatLng> path = [];
+                  for (var c in coords) {
+                    final lng = (c[0] as num).toDouble();
+                    final lat = (c[1] as num).toDouble();
+                    path.add(LatLng(lat, lng));
+                  }
+                  setState(() {
+                    _routedBusToStopPath = path;
+                    _estimatedDurationSeconds = duration;
+                    _estimatedDistanceMeters = distance;
+                  });
                 }
-                setState(() {
-                  _routedBusToStopPath = path;
-                });
               }
+            } else {
+              throw Exception('OSRM error');
             }
+          } catch (_) {
+            // Fallback: estimate based on straight-line distance
+            double totalDist = 0.0;
+            for (int i = 0; i < pointsToRoute.length - 1; i++) {
+              totalDist += _calculateDistance(pointsToRoute[i], pointsToRoute[i + 1]);
+            }
+            // Average speed of 30 km/h is 8.33 m/s
+            final duration = totalDist / 8.33;
+            setState(() {
+              _routedBusToStopPath = [];
+              _estimatedDurationSeconds = duration;
+              _estimatedDistanceMeters = totalDist;
+            });
           }
         }
       }
@@ -410,6 +433,20 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
     }
 
     return 0.0;
+  }
+
+  String _formatDuration(double seconds) {
+    final mins = (seconds / 60).round();
+    if (mins <= 0) return 'Arriving now';
+    if (mins == 1) return '1 min';
+    return '$mins mins';
+  }
+
+  String _formatDistance(double meters) {
+    if (meters < 1000) {
+      return '${meters.round()} m';
+    }
+    return '${(meters / 1000).toStringAsFixed(1)} km';
   }
 
   @override
@@ -728,6 +765,56 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
                               MarkerLayer(markers: markers),
                             ],
                           ),
+                          // Floating ETA Card
+                          if (_isTracking && _estimatedDurationSeconds != null)
+                            Positioned(
+                              top: 16,
+                              left: 16,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.92),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black12,
+                                      blurRadius: 10,
+                                      offset: Offset(0, 4),
+                                    )
+                                  ],
+                                  border: Border.all(color: Colors.grey.shade200),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.directions_bus_rounded, color: Colors.orange.shade800, size: 20),
+                                    const SizedBox(width: 8),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'ETA: ${_formatDuration(_estimatedDurationSeconds!)}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13,
+                                            color: Colors.black87,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Distance: ${_formatDistance(_estimatedDistanceMeters!)}',
+                                          style: TextStyle(
+                                            fontSize: 10.5,
+                                            color: Colors.grey.shade600,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           // Floating Action Buttons to Center Map
                           if (_animatedBusPosition != null && _isTracking)
                             Positioned(
