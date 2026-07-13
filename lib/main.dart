@@ -41,10 +41,15 @@ class MyApp extends StatelessWidget {
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF2C3E50),
-          primary: const Color(0xFF2C3E50),
+          primary: const Color(0xFF5D9CEC),
           brightness: Brightness.dark,
         ).copyWith(
           onPrimary: Colors.white,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1E2A38),
+          foregroundColor: Colors.white,
+          iconTheme: IconThemeData(color: Colors.white),
         ),
         useMaterial3: true,
       ),
@@ -997,7 +1002,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                     const SizedBox(height: 4),
                     Text(
                       'Here parents add and manage their children for school transit.',
-                      style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+                      style: theme.textTheme.bodyMedium?.copyWith(color: theme.brightness == Brightness.dark ? Colors.grey.shade400 : Colors.grey.shade600),
                     ),
                   ],
                 ),
@@ -3055,14 +3060,18 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
             Expanded(
               child: ListTile(
                 contentPadding: const EdgeInsets.only(left: 11, right: 16),
-                leading: Icon(
+                 leading: Icon(
                   icon,
-                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.primary.withOpacity(0.7),
+                  color: isSelected
+                      ? (theme.brightness == Brightness.dark ? Colors.blue.shade300 : theme.colorScheme.primary)
+                      : (theme.brightness == Brightness.dark ? Colors.white70 : theme.colorScheme.primary.withOpacity(0.7)),
                 ),
                 title: Text(
                   label,
                   style: TextStyle(
-                    color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                    color: isSelected
+                        ? (theme.brightness == Brightness.dark ? Colors.blue.shade300 : theme.colorScheme.primary)
+                        : theme.colorScheme.onSurface,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
@@ -3162,8 +3171,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: theme.colorScheme.primary,
-        iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
+        backgroundColor: theme.brightness == Brightness.dark ? const Color(0xFF1E2A38) : theme.colorScheme.primary,
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Text(
           _currentIndex == 0
               ? 'Groups'
@@ -3180,10 +3189,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                   : _currentIndex == 7
                                       ? 'Attendants'
                                       : widget.title,
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
-            color: theme.colorScheme.onPrimary,
+            color: Colors.white,
           ),
         ),
       ),

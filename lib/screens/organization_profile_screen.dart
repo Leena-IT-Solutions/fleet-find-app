@@ -53,12 +53,12 @@ class OrganizationProfileScreen extends StatelessWidget {
     final List<dynamic> plans = org['subscription_plans'] as List<dynamic>? ?? [];
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Organization Profile'),
         elevation: 0,
         backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black87,
+        foregroundColor: theme.colorScheme.onSurface,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -203,17 +203,18 @@ class OrganizationProfileScreen extends StatelessWidget {
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: Colors.grey.shade200),
+                      side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          _buildDetailRow(
+                           _buildDetailRow(
                             icon: Icons.location_on_rounded,
                             iconColor: Colors.red.shade600,
                             title: 'Address',
                             value: address,
+                            theme: theme,
                           ),
                           if (showEmail) ...[
                             const Divider(height: 24),
@@ -222,6 +223,7 @@ class OrganizationProfileScreen extends StatelessWidget {
                               iconColor: Colors.blue.shade600,
                               title: 'Email Address',
                               value: email,
+                              theme: theme,
                             ),
                           ],
                           if (showPhone) ...[
@@ -231,6 +233,7 @@ class OrganizationProfileScreen extends StatelessWidget {
                               iconColor: Colors.green.shade600,
                               title: 'Phone Number',
                               value: number,
+                              theme: theme,
                             ),
                           ],
                         ],
@@ -319,10 +322,10 @@ class OrganizationProfileScreen extends StatelessWidget {
                                   Expanded(
                                     child: Text(
                                       planName,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
+                                        color: theme.colorScheme.onSurface,
                                       ),
                                     ),
                                   ),
@@ -448,6 +451,7 @@ class OrganizationProfileScreen extends StatelessWidget {
     required Color iconColor,
     required String title,
     required String value,
+    required ThemeData theme,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,10 +480,10 @@ class OrganizationProfileScreen extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ],

@@ -270,7 +270,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
                 child: Icon(
                   isSharing ? Icons.location_on_rounded : Icons.location_off_rounded,
                   size: 20,
-                  color: isSharing ? Colors.green.shade800 : Colors.grey.shade600,
+                  color: isSharing
+                      ? (theme.brightness == Brightness.dark ? Colors.green.shade400 : Colors.green.shade800)
+                      : (theme.brightness == Brightness.dark ? Colors.grey.shade400 : Colors.grey.shade600),
                 ),
               ),
               const SizedBox(width: 12),
@@ -284,7 +286,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
                     ),
                     Text(
                       isSharing ? 'Other members can see your live position.' : 'Your location is hidden from this group.',
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                      style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.grey.shade400 : Colors.grey.shade600, fontSize: 11),
                     ),
                   ],
                 ),
@@ -474,7 +476,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
                     decoration: BoxDecoration(
                       color: member['role'] == 'admin'
                           ? theme.colorScheme.primary.withOpacity(0.12)
-                          : Colors.grey.shade100,
+                          : (theme.brightness == Brightness.dark ? Colors.grey.shade800 : Colors.grey.shade100),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
@@ -482,7 +484,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: member['role'] == 'admin' ? theme.colorScheme.primary : Colors.grey.shade600,
+                        color: member['role'] == 'admin'
+                            ? theme.colorScheme.primary
+                            : (theme.brightness == Brightness.dark ? Colors.grey.shade300 : Colors.grey.shade600),
                       ),
                     ),
                   ),
@@ -491,7 +495,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(email, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                  Text(email, style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.grey.shade400 : Colors.grey.shade600, fontSize: 13)),
                   if (isSharing && member['latitude'] != null) ...[
                     const SizedBox(height: 4),
                     Row(
@@ -696,7 +700,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
                           const SizedBox(height: 4),
                           Text(
                             'Active Role: ${_selectedMemberOnMap!['role'] == 'admin' ? 'Admin' : 'Member'}',
-                            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                            style: TextStyle(color: theme.brightness == Brightness.dark ? Colors.grey.shade400 : Colors.grey.shade600, fontSize: 13),
                           ),
                         ],
                       ),
