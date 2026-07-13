@@ -33,6 +33,8 @@ class MyApp extends StatelessWidget {
           seedColor: const Color(0xFF2C3E50),
           primary: const Color(0xFF2C3E50),
           brightness: Brightness.light,
+        ).copyWith(
+          onPrimary: Colors.white,
         ),
         useMaterial3: true,
       ),
@@ -41,6 +43,8 @@ class MyApp extends StatelessWidget {
           seedColor: const Color(0xFF2C3E50),
           primary: const Color(0xFF2C3E50),
           brightness: Brightness.dark,
+        ).copyWith(
+          onPrimary: Colors.white,
         ),
         useMaterial3: true,
       ),
