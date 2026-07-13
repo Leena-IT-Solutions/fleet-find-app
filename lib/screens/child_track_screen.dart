@@ -244,6 +244,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
 
       final isPickup = _pickupStop != null && _pickupStop!['id'] == s['id'];
       final isDrop = _dropStop != null && _dropStop!['id'] == s['id'];
+      final isSchool = s['is_school'] == true;
 
       markers.add(
         Marker(
@@ -253,19 +254,23 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
           child: Column(
             children: [
               Icon(
-                isPickup
-                    ? Icons.location_on_rounded
-                    : isDrop
+                isSchool
+                    ? Icons.school_rounded
+                    : isPickup
                         ? Icons.location_on_rounded
-                        : Icons.trip_origin_rounded,
-                color: isPickup
-                    ? Colors.green
-                    : isDrop
-                        ? Colors.red
-                        : Colors.blue.shade400,
-                size: isPickup || isDrop ? 28 : 16,
+                        : isDrop
+                            ? Icons.location_on_rounded
+                            : Icons.trip_origin_rounded,
+                color: isSchool
+                    ? Colors.purple
+                    : isPickup
+                        ? Colors.green
+                        : isDrop
+                            ? Colors.red
+                            : Colors.blue.shade400,
+                size: isSchool || isPickup || isDrop ? 28 : 16,
               ),
-              if (isPickup || isDrop)
+              if (isSchool || isPickup || isDrop)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                   decoration: BoxDecoration(
@@ -274,7 +279,11 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
                     boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2)],
                   ),
                   child: Text(
-                    isPickup ? 'Pickup' : 'Dropoff',
+                    isSchool
+                        ? 'School'
+                        : isPickup
+                            ? 'Pickup'
+                            : 'Dropoff',
                     style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.black87),
                   ),
                 ),
@@ -522,6 +531,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
                             final stop = _stopsRaw[index];
                             final isPickup = _pickupStop != null && _pickupStop!['id'] == stop['id'];
                             final isDrop = _dropStop != null && _dropStop!['id'] == stop['id'];
+                            final isSchool = stop['is_school'] == true;
                             final scheduledTime = stop['time'] as String? ?? '--:--';
 
                             return Row(
@@ -533,11 +543,13 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
                                       width: 14,
                                       height: 14,
                                       decoration: BoxDecoration(
-                                        color: isPickup
-                                            ? Colors.green
-                                            : isDrop
-                                                ? Colors.red
-                                                : Colors.blue.shade200,
+                                        color: isSchool
+                                            ? Colors.purple
+                                            : isPickup
+                                                ? Colors.green
+                                                : isDrop
+                                                    ? Colors.red
+                                                    : Colors.blue.shade200,
                                         shape: BoxShape.circle,
                                         border: Border.all(color: Colors.white, width: 2),
                                       ),
@@ -559,18 +571,26 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
                                       Text(
                                         stop['name'] ?? 'N/A',
                                         style: TextStyle(
-                                          fontWeight: isPickup || isDrop ? FontWeight.bold : FontWeight.normal,
+                                          fontWeight: isSchool || isPickup || isDrop ? FontWeight.bold : FontWeight.normal,
                                           fontSize: 14,
-                                          color: isPickup || isDrop ? Colors.black87 : Colors.black54,
+                                          color: isSchool || isPickup || isDrop ? Colors.black87 : Colors.black54,
                                         ),
                                       ),
-                                      if (isPickup || isDrop)
+                                      if (isSchool || isPickup || isDrop)
                                         Text(
-                                          isPickup ? 'Your Pickup Stop' : 'Your Dropoff Stop',
+                                          isSchool
+                                              ? 'School Location'
+                                              : isPickup
+                                                  ? 'Your Pickup Stop'
+                                                  : 'Your Dropoff Stop',
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.bold,
-                                            color: isPickup ? Colors.green : Colors.red,
+                                            color: isSchool
+                                                ? Colors.purple
+                                                : isPickup
+                                                    ? Colors.green
+                                                    : Colors.red,
                                           ),
                                         ),
                                       const SizedBox(height: 12),
@@ -579,9 +599,9 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
                                 ),
                                 // Scheduled Time
                                 Text(
-                                  scheduledTime,
+                                  isSchool ? '' : scheduledTime,
                                   style: TextStyle(
-                                    fontWeight: isPickup || isDrop ? FontWeight.bold : FontWeight.normal,
+                                    fontWeight: isSchool || isPickup || isDrop ? FontWeight.bold : FontWeight.normal,
                                     fontSize: 13,
                                     color: Colors.grey.shade500,
                                   ),
