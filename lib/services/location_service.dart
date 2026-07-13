@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'api_service.dart';
 
 class LocationService {
@@ -183,9 +184,22 @@ class LocationService {
   }
 }
 
-// Global function to initialize FlutterBackgroundService configurations
 Future<void> initializeService() async {
   final service = FlutterBackgroundService();
+
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'trip_tracking_channel',
+    'FleetFind Live Route Tracking',
+    description: 'This channel is used for live location sharing notifications.',
+    importance: Importance.low,
+  );
+
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
 
   await service.configure(
     androidConfiguration: AndroidConfiguration(
