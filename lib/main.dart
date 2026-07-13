@@ -2814,6 +2814,20 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         final trips = (org['trips'] as List?) ?? [];
         final allOrgs = (snapshot.data!['organizations'] as List?) ?? [];
 
+        final liveRoutes = [];
+        for (var t in trips) {
+          final routesList = (t['routes'] as List?) ?? [];
+          for (var r in routesList) {
+            if (r['is_tracking'] == true) {
+              liveRoutes.add({
+                'trip_id': t['id'],
+                'trip_name': t['name'],
+                ...r,
+              });
+            }
+          }
+        }
+
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -2953,6 +2967,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                     _buildOrgTabItem(0, 'Crew', '${drivers.length + attendants.length}', Icons.badge_rounded, theme),
                     _buildOrgTabItem(1, 'Vehicles', '${vehicles.length}', Icons.directions_bus_rounded, theme),
                     _buildOrgTabItem(2, 'Trips', '${trips.length}', Icons.route_rounded, theme),
+                    _buildOrgTabItem(3, 'Live', '${liveRoutes.length}', Icons.sensors_rounded, theme),
                   ],
                 ),
               ),
@@ -2963,8 +2978,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                 _buildCrewTab(org['id'] as int, drivers, attendants, theme),
               ] else if (_activeOrgTabIndex == 1) ...[
                 _buildVehiclesTab(org['id'] as int, vehicles, theme),
-              ] else ...[
+              ] else if (_activeOrgTabIndex == 2) ...[
                 _buildTripsTab(org['id'] as int, trips, vehicles, drivers, attendants, theme),
+              ] else ...[
+                _buildLiveTab(org['id'] as int, liveRoutes, theme),
               ],
               const SizedBox(height: 60), // Extra spacing for bottom notched bar
             ],
@@ -4033,6 +4050,198 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLiveTab(int orgId, List<dynamic> liveRoutes, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(theme, 'Active Live Routes (${liveRoutes.length})', Icons.sensors_rounded),
+        const SizedBox(height: 8),
+        if (liveRoutes.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24.0, horizontal: 4),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(Icons.sensors_off_rounded, size: 48, color: Colors.grey),
+                  SizedBox(height: 12),
+                  Text(
+                    'No active routes right now.',
+                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...liveRoutes.map((r) {
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            r['route_name'] ?? 'Route',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: Colors.green,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Text(
+                                'LIVE',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Trip: ${r['trip_name'] ?? 'N/A'}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.directions_bus_rounded, size: 14, color: theme.colorScheme.primary),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Vehicle: ${r['vehicle_number']}',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.person_rounded, size: 14, color: theme.colorScheme.secondary),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Driver: ${r['driver_name']}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                        if (r['driver_mobile'] != null && r['driver_mobile'].toString().isNotEmpty && r['driver_name'] != 'N/A')
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () async {
+                                final url = Uri.parse('tel:${r['driver_mobile']}');
+                                if (await canLaunchUrl(url)) {
+                                  await launchUrl(url);
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Icon(Icons.call, size: 16, color: theme.colorScheme.primary),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.person_outline_rounded, size: 14, color: theme.colorScheme.secondary),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Attendant: ${r['attendant_name']}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                        if (r['attendant_mobile'] != null && r['attendant_mobile'].toString().isNotEmpty && r['attendant_name'] != 'N/A')
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () async {
+                                final url = Uri.parse('tel:${r['attendant_mobile']}');
+                                if (await canLaunchUrl(url)) {
+                                  await launchUrl(url);
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Icon(Icons.call, size: 16, color: theme.colorScheme.primary),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/child-track',
+                          arguments: {
+                            'is_admin_mode': true,
+                            'org_id': orgId,
+                            'route_id': r['route_id'] as int,
+                            'route_name': r['route_name'] ?? 'Route',
+                          },
+                        );
+                      },
+                      icon: const Icon(Icons.map_rounded, size: 16),
+                      label: const Text('TRACK LIVE ON MAP'),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(40),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+      ],
     );
   }
 

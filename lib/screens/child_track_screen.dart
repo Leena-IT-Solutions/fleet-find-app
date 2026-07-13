@@ -16,6 +16,9 @@ class ChildTrackScreen extends StatefulWidget {
 
 class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerProviderStateMixin {
   Map<String, dynamic>? _child;
+  bool _isAdminMode = false;
+  int? _adminOrgId;
+  int? _adminRouteId;
   bool _isLoading = true;
   String _errorMsg = '';
   Timer? _timer;
@@ -76,13 +79,22 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_child == null) {
+    if (_child == null && !_isAdminMode) {
       final args = ModalRoute.of(context)?.settings.arguments;
       if (args is Map<String, dynamic>) {
-        _child = args;
-        _childName = _child!['name'] ?? 'Child';
-        _fetchTracking(isFirstTime: true);
-        _startTimer();
+        if (args['is_admin_mode'] == true) {
+          _isAdminMode = true;
+          _adminOrgId = args['org_id'] as int?;
+          _adminRouteId = args['route_id'] as int?;
+          _childName = args['route_name'] ?? 'Route';
+          _fetchTracking(isFirstTime: true);
+          _startTimer();
+        } else {
+          _child = args;
+          _childName = _child!['name'] ?? 'Child';
+          _fetchTracking(isFirstTime: true);
+          _startTimer();
+        }
       } else {
         setState(() {
           _errorMsg = 'Invalid child arguments';
@@ -100,12 +112,18 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
   }
 
   Future<void> _fetchTracking({bool isFirstTime = false}) async {
-    if (_child == null) return;
-    final childId = _child!['id'] as int?;
-    if (childId == null) return;
+    if (_child == null && !_isAdminMode) return;
 
     try {
-      final res = await ApiService.getChildTracking(childId);
+      final Map<String, dynamic> res;
+      if (_isAdminMode) {
+        if (_adminOrgId == null || _adminRouteId == null) return;
+        res = await ApiService.getRouteTracking(_adminOrgId!, _adminRouteId!);
+      } else {
+        final childId = _child!['id'] as int?;
+        if (childId == null) return;
+        res = await ApiService.getChildTracking(childId);
+      }
       if (!mounted) return;
 
       if (res['success'] == true) {
@@ -637,7 +655,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
         centerTitle: false,
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
-        actions: [
+        actions: _isAdminMode ? [] : [
           IconButton(
             icon: const Icon(Icons.info_outline_rounded),
             tooltip: 'View Details',

@@ -1404,4 +1404,26 @@ class ApiService {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
+
+  // Get live route tracking coordinates for organization admins
+  static Future<Map<String, dynamic>> getRouteTracking(int orgId, int routeId) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/organization/$orgId/routes/$routeId/tracking'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      return data;
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
 }
