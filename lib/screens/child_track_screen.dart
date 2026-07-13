@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
@@ -32,6 +33,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
   List<LatLng> _routedPath = [];
   List<LatLng> _routedBusToStopPath = [];
   bool _isFetchingRoute = false;
+  double _busRotation = 0.0;
 
   // Map configuration
   String _mapProvider = 'leaflet';
@@ -145,12 +147,17 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
             setState(() {
               _targetBusPosition = newBusPos;
               _animatedBusPosition = newBusPos;
+              _busRotation = _determineInitialBearing(newBusPos!);
             });
             _centerMap(newBusPos);
           } else if (_targetBusPosition != newBusPos) {
             // Location changed, animate from previous animated position to new position
+            final bearing = _calculateBearing(_targetBusPosition!, newBusPos);
             _oldBusPosition = _animatedBusPosition ?? _targetBusPosition;
             _targetBusPosition = newBusPos;
+            setState(() {
+              _busRotation = bearing;
+            });
             _animationController!.forward(from: 0.0);
           }
 
@@ -282,6 +289,46 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
     }
   }
 
+  double _calculateBearing(LatLng start, LatLng end) {
+    final lat1 = start.latitude * math.pi / 180.0;
+    final lon1 = start.longitude * math.pi / 180.0;
+    final lat2 = end.latitude * math.pi / 180.0;
+    final lon2 = end.longitude * math.pi / 180.0;
+
+    final dLon = lon2 - lon1;
+
+    final y = math.sin(dLon) * math.cos(lat2);
+    final x = math.cos(lat1) * math.sin(lat2) -
+        math.sin(lat1) * math.cos(lat2) * math.cos(dLon);
+
+    final radians = math.atan2(y, x);
+    return radians;
+  }
+
+  double _determineInitialBearing(LatLng busPos) {
+    if (_stopsPoints.isEmpty) return 0.0;
+
+    int closestIndex = 0;
+    double minDistance = double.maxFinite;
+    for (int i = 0; i < _stopsPoints.length; i++) {
+      final p = _stopsPoints[i];
+      final dist = math.pow(p.latitude - busPos.latitude, 2) +
+          math.pow(p.longitude - busPos.longitude, 2);
+      if (dist < minDistance) {
+        minDistance = dist.toDouble();
+        closestIndex = i;
+      }
+    }
+
+    if (closestIndex < _stopsPoints.length - 1) {
+      return _calculateBearing(busPos, _stopsPoints[closestIndex + 1]);
+    } else if (closestIndex > 0) {
+      return _calculateBearing(_stopsPoints[closestIndex - 1], busPos);
+    }
+
+    return 0.0;
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -389,10 +436,13 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
                 )
               ],
             ),
-            child: const Icon(
-              Icons.directions_bus_rounded,
-              color: Colors.amber,
-              size: 32,
+            child: Transform.rotate(
+              angle: _busRotation,
+              child: const Icon(
+                Icons.directions_bus_rounded,
+                color: Colors.amber,
+                size: 32,
+              ),
             ),
           ),
         ),
