@@ -56,6 +56,7 @@ class OrganizationProfileScreen extends StatelessWidget {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Organization Profile'),
+        centerTitle: false,
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: theme.colorScheme.onSurface,

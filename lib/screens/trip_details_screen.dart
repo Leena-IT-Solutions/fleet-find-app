@@ -158,6 +158,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           tripName,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
+        centerTitle: false,
         elevation: 0,
       ),
       body: SingleChildScrollView(

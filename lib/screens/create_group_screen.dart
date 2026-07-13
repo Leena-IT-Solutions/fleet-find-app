@@ -58,6 +58,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       appBar: AppBar(
         backgroundColor: theme.colorScheme.primary,
         iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
+        centerTitle: false,
         title: Text(
           'Create Transit Group',
           style: TextStyle(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.bold),

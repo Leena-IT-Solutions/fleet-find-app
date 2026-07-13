@@ -293,7 +293,7 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
 
     if (_errorMsg.isNotEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Child Profile')),
+        appBar: AppBar(title: const Text('Child Profile'), centerTitle: false),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -339,6 +339,7 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(child['name'] ?? 'Child Profile'),
+        centerTitle: false,
         backgroundColor: theme.brightness == Brightness.dark ? const Color(0xFF1E2A38) : theme.colorScheme.primary,
         foregroundColor: Colors.white,
         iconTheme: const IconThemeData(color: Colors.white),

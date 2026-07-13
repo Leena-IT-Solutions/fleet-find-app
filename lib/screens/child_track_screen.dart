@@ -634,6 +634,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
     return Scaffold(
       appBar: AppBar(
         title: Text('Track $_childName'),
+        centerTitle: false,
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
         actions: [

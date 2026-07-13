@@ -74,6 +74,7 @@ class _AddMemberScreenState extends State<AddMemberScreen> {
       appBar: AppBar(
         backgroundColor: theme.colorScheme.primary,
         iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
+        centerTitle: false,
         title: Text(
           'Add Member',
           style: TextStyle(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.bold),

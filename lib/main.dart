@@ -37,6 +37,9 @@ class MyApp extends StatelessWidget {
           primary: const Color(0xFF2C3E50),
           onPrimary: Colors.white,
         ),
+        appBarTheme: const AppBarTheme(
+          centerTitle: false,
+        ),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
@@ -51,6 +54,7 @@ class MyApp extends StatelessWidget {
           backgroundColor: Color(0xFF1E2A38),
           foregroundColor: Colors.white,
           iconTheme: IconThemeData(color: Colors.white),
+          centerTitle: false,
         ),
         useMaterial3: true,
       ),
@@ -3784,6 +3788,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       appBar: AppBar(
         backgroundColor: theme.brightness == Brightness.dark ? const Color(0xFF1E2A38) : theme.colorScheme.primary,
         iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: false,
         title: Text(
           _currentIndex == 0
               ? 'Groups'

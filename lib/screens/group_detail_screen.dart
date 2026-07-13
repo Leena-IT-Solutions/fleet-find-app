@@ -312,6 +312,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
       appBar: AppBar(
         backgroundColor: theme.colorScheme.primary,
         iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
+        centerTitle: false,
         title: Text(
           widget.groupName,
           style: TextStyle(color: theme.colorScheme.onPrimary, fontWeight: FontWeight.bold),
