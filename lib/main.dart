@@ -2964,7 +2964,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
               ] else if (_activeOrgTabIndex == 1) ...[
                 _buildVehiclesTab(org['id'] as int, vehicles, theme),
               ] else ...[
-                _buildTripsTab(trips, theme),
+                _buildTripsTab(org['id'] as int, trips, vehicles, drivers, attendants, theme),
               ],
               const SizedBox(height: 60), // Extra spacing for bottom notched bar
             ],
@@ -3602,7 +3602,14 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildTripsTab(List<dynamic> trips, ThemeData theme) {
+  Widget _buildTripsTab(
+    int orgId,
+    List<dynamic> trips,
+    List<dynamic> vehicles,
+    List<dynamic> drivers,
+    List<dynamic> attendants,
+    ThemeData theme,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -3672,7 +3679,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                         final isLive = r['is_tracking'] == true;
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: theme.brightness == Brightness.dark
                                 ? Colors.grey.shade900.withOpacity(0.5)
@@ -3682,77 +3688,97 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                               color: theme.colorScheme.outlineVariant.withOpacity(0.3),
                             ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          child: InkWell(
+                            onTap: () => _showAssignLogisticsDialog(
+                              orgId: orgId,
+                              tripId: t['id'] as int,
+                              route: r,
+                              vehicles: vehicles,
+                              drivers: drivers,
+                              attendants: attendants,
+                              theme: theme,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    r['route_name'] ?? 'Route',
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: isLive ? Colors.green.withOpacity(0.15) : Colors.grey.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 6,
-                                          height: 6,
-                                          decoration: BoxDecoration(
-                                            color: isLive ? Colors.green : Colors.grey,
-                                            shape: BoxShape.circle,
-                                          ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          r['route_name'] ?? 'Route',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                                         ),
-                                        const SizedBox(width: 6),
-                                        Text(
-                                          isLive ? 'LIVE' : 'OFFLINE',
-                                          style: TextStyle(
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.bold,
-                                            color: isLive ? Colors.green : Colors.grey,
-                                          ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Icon(Icons.edit_outlined, size: 16, color: theme.colorScheme.primary),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: isLive ? Colors.green.withOpacity(0.15) : Colors.grey.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(8),
                                         ),
-                                      ],
-                                    ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 6,
+                                              height: 6,
+                                              decoration: BoxDecoration(
+                                                color: isLive ? Colors.green : Colors.grey,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              isLive ? 'LIVE' : 'OFFLINE',
+                                              style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.bold,
+                                                color: isLive ? Colors.green : Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.directions_bus_rounded, size: 14, color: theme.colorScheme.primary),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Vehicle: ${r['vehicle_number']}',
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.person_rounded, size: 14, color: theme.colorScheme.secondary),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Driver: ${r['driver_name']}',
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Icon(Icons.person_outline_rounded, size: 14, color: theme.colorScheme.secondary),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Attendant: ${r['attendant_name']}',
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Icon(Icons.directions_bus_rounded, size: 14, color: theme.colorScheme.primary),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Vehicle: ${r['vehicle_number']}',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Icon(Icons.person_rounded, size: 14, color: theme.colorScheme.secondary),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Driver: ${r['driver_name']}',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Icon(Icons.person_outline_rounded, size: 14, color: theme.colorScheme.secondary),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Attendant: ${r['attendant_name']}',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ],
+                            ),
                           ),
                         );
                       }),
@@ -3763,6 +3789,208 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
             );
           }),
       ],
+    );
+  }
+
+  void _showAssignLogisticsDialog({
+    required int orgId,
+    required int tripId,
+    required Map<String, dynamic> route,
+    required List<dynamic> vehicles,
+    required List<dynamic> drivers,
+    required List<dynamic> attendants,
+    required ThemeData theme,
+  }) {
+    int? selectedVehicleId = route['vehicle_id'] as int?;
+    int? selectedDriverId = route['driver_id'] as int?;
+    int? selectedAttendantId = route['attendant_id'] as int?;
+
+    if (selectedVehicleId != null && !vehicles.any((v) => v['id'] == selectedVehicleId)) {
+      selectedVehicleId = null;
+    }
+    if (selectedDriverId != null && !drivers.any((d) => d['id'] == selectedDriverId)) {
+      selectedDriverId = null;
+    }
+    if (selectedAttendantId != null && !attendants.any((a) => a['id'] == selectedAttendantId)) {
+      selectedAttendantId = null;
+    }
+
+    String? errorText;
+    bool isSaving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => Container(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + MediaQuery.of(context).padding.bottom + 24,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Assign Trip Roster',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Route: ${route['route_name'] ?? 'N/A'}',
+                  style: theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                if (errorText != null) ...[
+                  Text(
+                    errorText!,
+                    style: TextStyle(color: theme.colorScheme.error, fontWeight: FontWeight.w500),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                // Vehicle selection
+                DropdownButtonFormField<int?>(
+                  value: selectedVehicleId,
+                  decoration: const InputDecoration(
+                    labelText: 'Select Vehicle',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('None (Unassigned)'),
+                    ),
+                    ...vehicles.map((v) => DropdownMenuItem<int?>(
+                          value: v['id'] as int?,
+                          child: Text('${v['registration_number']} (${v['type']})'),
+                        )),
+                  ],
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedVehicleId = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Driver selection
+                DropdownButtonFormField<int?>(
+                  value: selectedDriverId,
+                  decoration: const InputDecoration(
+                    labelText: 'Select Driver',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('None (Unassigned)'),
+                    ),
+                    ...drivers.map((d) => DropdownMenuItem<int?>(
+                          value: d['id'] as int?,
+                          child: Text(d['driver_name'] ?? 'N/A'),
+                        )),
+                  ],
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedDriverId = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Attendant selection
+                DropdownButtonFormField<int?>(
+                  value: selectedAttendantId,
+                  decoration: const InputDecoration(
+                    labelText: 'Select Attendant',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('None (Unassigned)'),
+                    ),
+                    ...attendants.map((a) => DropdownMenuItem<int?>(
+                          value: a['id'] as int?,
+                          child: Text(a['attendant_name'] ?? 'N/A'),
+                        )),
+                  ],
+                  onChanged: (value) {
+                    setDialogState(() {
+                      selectedAttendantId = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: isSaving
+                      ? null
+                      : () async {
+                          setDialogState(() {
+                            isSaving = true;
+                            errorText = null;
+                          });
+
+                          final res = await ApiService.assignTripLogistics(
+                            orgId: orgId,
+                            tripId: tripId,
+                            routeId: route['route_id'] as int,
+                            vehicleId: selectedVehicleId,
+                            driverId: selectedDriverId,
+                            attendantId: selectedAttendantId,
+                          );
+
+                          if (res['success'] == true) {
+                            Navigator.pop(context);
+                            setState(() {});
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(
+                                content: Text(res['message'] ?? 'Roster assigned successfully.'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } else {
+                            setDialogState(() {
+                              isSaving = false;
+                              errorText = res['message'] ?? 'Failed to save assignments.';
+                            });
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('SAVE ASSIGNMENTS'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

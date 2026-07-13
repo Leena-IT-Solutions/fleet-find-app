@@ -1365,4 +1365,43 @@ class ApiService {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
+
+  // Assign vehicle, driver, and attendant to a trip route logistics record
+  static Future<Map<String, dynamic>> assignTripLogistics({
+    required int orgId,
+    required int tripId,
+    required int routeId,
+    required int? vehicleId,
+    required int? driverId,
+    required int? attendantId,
+  }) async {
+    try {
+      final token = await getToken();
+      if (token == null) return {'success': false, 'message': 'No authentication token found'};
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/organization/$orgId/trips/$tripId/assign'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'route_id': routeId,
+          'vehicle_id': vehicleId,
+          'driver_id': driverId,
+          'attendant_id': attendantId,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message'] ?? 'Assignments updated successfully'};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Failed to update assignments'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
 }
