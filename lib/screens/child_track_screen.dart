@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../services/api_service.dart';
 
@@ -27,6 +29,9 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
   Map<String, dynamic>? _dropStop;
   List<LatLng> _stopsPoints = [];
   List<Map<String, dynamic>> _stopsRaw = [];
+  List<LatLng> _routedPath = [];
+  List<LatLng> _routedBusToStopPath = [];
+  bool _isFetchingRoute = false;
 
   // Map configuration
   String _mapProvider = 'leaflet';
@@ -131,6 +136,8 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
           _googleMapsApiKey = res['google_maps_api_key'] ?? '';
         });
 
+        _fetchRoutes();
+
         // Trigger smooth bus movement animation
         if (newBusPos != null) {
           if (_targetBusPosition == null) {
@@ -180,6 +187,76 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
           _errorMsg = 'Error fetching live locations: $e';
         });
       }
+    }
+  }
+
+  Future<void> _fetchRoutes() async {
+    if (_isFetchingRoute) return;
+    _isFetchingRoute = true;
+
+    try {
+      // 1. Fetch main route connecting all stops
+      if (_stopsPoints.length >= 2) {
+        final coordString = _stopsPoints.map((p) => '${p.longitude},${p.latitude}').join(';');
+        final url = Uri.parse('https://router.project-osrm.org/route/v1/driving/$coordString?overview=full&geometries=geojson');
+        final response = await http.get(url).timeout(const Duration(seconds: 5));
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          final routes = data['routes'] as List?;
+          if (routes != null && routes.isNotEmpty) {
+            final geometry = routes[0]['geometry'] as Map<String, dynamic>?;
+            final coords = geometry?['coordinates'] as List?;
+            if (coords != null) {
+              final List<LatLng> path = [];
+              for (var c in coords) {
+                final lng = (c[0] as num).toDouble();
+                final lat = (c[1] as num).toDouble();
+                path.add(LatLng(lat, lng));
+              }
+              setState(() {
+                _routedPath = path;
+              });
+            }
+          }
+        }
+      }
+
+      // 2. Fetch highlight path from bus to target stop
+      final targetStop = _pickupStop ?? _dropStop;
+      if (_animatedBusPosition != null && targetStop != null && _isTracking) {
+        final stopLat = (targetStop['latitude'] as num?)?.toDouble();
+        final stopLng = (targetStop['longitude'] as num?)?.toDouble();
+        if (stopLat != null && stopLng != null) {
+          final start = _animatedBusPosition!;
+          final end = LatLng(stopLat, stopLng);
+          final coordString = '${start.longitude},${start.latitude};${end.longitude},${end.latitude}';
+          final url = Uri.parse('https://router.project-osrm.org/route/v1/driving/$coordString?overview=full&geometries=geojson');
+          final response = await http.get(url).timeout(const Duration(seconds: 5));
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            final routes = data['routes'] as List?;
+            if (routes != null && routes.isNotEmpty) {
+              final geometry = routes[0]['geometry'] as Map<String, dynamic>?;
+              final coords = geometry?['coordinates'] as List?;
+              if (coords != null) {
+                final List<LatLng> path = [];
+                for (var c in coords) {
+                  final lng = (c[0] as num).toDouble();
+                  final lat = (c[1] as num).toDouble();
+                  path.add(LatLng(lat, lng));
+                }
+                setState(() {
+                  _routedBusToStopPath = path;
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (_) {
+      // Fallback silently
+    } finally {
+      _isFetchingRoute = false;
     }
   }
 
@@ -324,8 +401,16 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
 
     // Create polyline segments
     final List<Polyline> polylines = [];
-    if (_stopsPoints.isNotEmpty) {
-      // General route stops sequence (blue)
+    if (_routedPath.isNotEmpty) {
+      polylines.add(
+        Polyline(
+          points: _routedPath,
+          color: Colors.blue.withOpacity(0.6),
+          strokeWidth: 4.0,
+        ),
+      );
+    } else if (_stopsPoints.isNotEmpty) {
+      // Fallback to straight line stops sequence (blue)
       polylines.add(
         Polyline(
           points: _stopsPoints,
@@ -341,13 +426,24 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
       final stopLat = (targetStop['latitude'] as num?)?.toDouble();
       final stopLng = (targetStop['longitude'] as num?)?.toDouble();
       if (stopLat != null && stopLng != null) {
-        polylines.add(
-          Polyline(
-            points: [_animatedBusPosition!, LatLng(stopLat, stopLng)],
-            color: Colors.amber.shade700,
-            strokeWidth: 3.5,
-          ),
-        );
+        if (_routedBusToStopPath.isNotEmpty) {
+          polylines.add(
+            Polyline(
+              points: _routedBusToStopPath,
+              color: Colors.amber.shade700,
+              strokeWidth: 3.5,
+            ),
+          );
+        } else {
+          // Fallback to straight line
+          polylines.add(
+            Polyline(
+              points: [_animatedBusPosition!, LatLng(stopLat, stopLng)],
+              color: Colors.amber.shade700,
+              strokeWidth: 3.5,
+            ),
+          );
+        }
       }
     }
 
