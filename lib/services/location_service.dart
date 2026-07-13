@@ -250,10 +250,22 @@ void onStart(ServiceInstance service) async {
     try {
       Position? position;
       try {
-        position = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
+        LocationSettings settings;
+        try {
+          settings = AppleSettings(
             accuracy: LocationAccuracy.high,
-          ),
+            activityType: ActivityType.automotiveNavigation,
+            pauseLocationUpdatesAutomatically: false,
+            showBackgroundLocationIndicator: true,
+          );
+        } catch (_) {
+          settings = const LocationSettings(
+            accuracy: LocationAccuracy.high,
+          );
+        }
+
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: settings,
         ).timeout(const Duration(seconds: 5));
       } catch (_) {
         position = await Geolocator.getLastKnownPosition();

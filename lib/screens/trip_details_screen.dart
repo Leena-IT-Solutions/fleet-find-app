@@ -89,10 +89,21 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           });
           // Fetch current position immediately for instant UI feedback
           try {
-            final position = await Geolocator.getCurrentPosition(
-              locationSettings: const LocationSettings(
+            LocationSettings settings;
+            try {
+              settings = AppleSettings(
                 accuracy: LocationAccuracy.high,
-              ),
+                activityType: ActivityType.automotiveNavigation,
+                pauseLocationUpdatesAutomatically: false,
+                showBackgroundLocationIndicator: true,
+              );
+            } catch (_) {
+              settings = const LocationSettings(
+                accuracy: LocationAccuracy.high,
+              );
+            }
+            final position = await Geolocator.getCurrentPosition(
+              locationSettings: settings,
             );
             if (mounted) {
               setState(() {
