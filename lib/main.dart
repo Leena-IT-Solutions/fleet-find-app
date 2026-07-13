@@ -1422,6 +1422,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Divider(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1535,8 +1537,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
             );
           }).toList(),
           const SizedBox(height: 12),
-          Divider(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
-          const SizedBox(height: 12),
         ],
       ),
     );
@@ -1648,10 +1648,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (isDriver && driverTrips.isNotEmpty)
-                  _buildHomeTripsSection(theme, driverTrips, 'Driver'),
-                if (isAttendant && attendantTrips.isNotEmpty)
-                  _buildHomeTripsSection(theme, attendantTrips, 'Attendant'),
                 if (childrenList.isNotEmpty) ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
@@ -1904,6 +1900,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                     },
                   ),
                 ],
+                if (isDriver && driverTrips.isNotEmpty)
+                  _buildHomeTripsSection(theme, driverTrips, 'Driver'),
+                if (isAttendant && attendantTrips.isNotEmpty)
+                  _buildHomeTripsSection(theme, attendantTrips, 'Attendant'),
                 if (childrenList.isEmpty && hasAnyDutySection) ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
