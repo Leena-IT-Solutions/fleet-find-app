@@ -91,6 +91,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   bool _isSearching = false;
   String _searchError = '';
   int? _selectedOrganizationId;
+  int _activeOrgTabIndex = 0;
 
   // Search Pagination State
   int _searchPage = 1;
@@ -2810,6 +2811,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         final vehicles = (org['vehicles'] as List?) ?? [];
         final drivers = (org['drivers'] as List?) ?? [];
         final attendants = (org['attendants'] as List?) ?? [];
+        final trips = (org['trips'] as List?) ?? [];
         final allOrgs = (snapshot.data!['organizations'] as List?) ?? [];
 
         return SingleChildScrollView(
@@ -2934,128 +2936,370 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
-
-              // Counts Grid
-              const Text(
-                'Fleet & Operations Metrics',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 1.5,
-                children: [
-                  _buildStatCard(theme, 'Vehicles', vehiclesCount, Icons.directions_bus_rounded),
-                  _buildStatCard(theme, 'Drivers', driversCount, Icons.badge_rounded),
-                  _buildStatCard(theme, 'Attendants', attendantsCount, Icons.supervised_user_circle_rounded),
-                  _buildStatCard(theme, 'Routes', routesCount, Icons.route_rounded),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Details Lists (Vehicles, Drivers, Attendants)
-              const Text(
-                'Registered Fleet Details',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-
-              // Vehicles Section
-              _buildSectionHeader(theme, 'Vehicles list', Icons.directions_bus_rounded),
-              if (vehicles.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Text('No vehicles registered.', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                )
-              else
-                ...vehicles.map((v) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
-                      ),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                          child: Icon(Icons.directions_bus_rounded, color: theme.colorScheme.primary, size: 20),
-                        ),
-                        title: Text(
-                          v['registration_number'] ?? 'N/A',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text(v['type'] ?? 'N/A'),
-                      ),
-                    )),
-
               const SizedBox(height: 16),
 
-              // Drivers Section
-              _buildSectionHeader(theme, 'Drivers list', Icons.badge_rounded),
-              if (drivers.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Text('No drivers registered.', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                )
-              else
-                ...drivers.map((d) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
-                      ),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                          child: Icon(Icons.person_rounded, color: theme.colorScheme.primary, size: 20),
-                        ),
-                        title: Text(
-                          d['driver_name'] ?? 'N/A',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Text('License: ${d['license'] ?? 'N/A'}'),
-                      ),
-                    )),
-
+              // Tab Switching Segmented Control
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.grey.shade900
+                      : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    _buildOrgTabItem(0, 'Crew', '${drivers.length + attendants.length}', Icons.badge_rounded, theme),
+                    _buildOrgTabItem(1, 'Vehicles', '${vehicles.length}', Icons.directions_bus_rounded, theme),
+                    _buildOrgTabItem(2, 'Trips', '${trips.length}', Icons.route_rounded, theme),
+                  ],
+                ),
+              ),
               const SizedBox(height: 16),
 
-              // Attendants Section
-              _buildSectionHeader(theme, 'Attendants list', Icons.supervised_user_circle_rounded),
-              if (attendants.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Text('No attendants registered.', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                )
-              else
-                ...attendants.map((a) => Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
-                      ),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                          child: Icon(Icons.person_outline_rounded, color: theme.colorScheme.primary, size: 20),
-                        ),
-                        title: Text(
-                          a['attendant_name'] ?? 'N/A',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    )),
+              // Active Tab Content
+              if (_activeOrgTabIndex == 0) ...[
+                _buildCrewTab(drivers, attendants, theme),
+              ] else if (_activeOrgTabIndex == 1) ...[
+                _buildVehiclesTab(vehicles, theme),
+              ] else ...[
+                _buildTripsTab(trips, theme),
+              ],
               const SizedBox(height: 60), // Extra spacing for bottom notched bar
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildOrgTabItem(int index, String label, String count, IconData icon, ThemeData theme) {
+    final isSelected = _activeOrgTabIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _activeOrgTabIndex = index;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? theme.colorScheme.primary
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? theme.colorScheme.onPrimary.withOpacity(0.2)
+                          : theme.colorScheme.primaryContainer.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      count,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCrewTab(List<dynamic> drivers, List<dynamic> attendants, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(theme, 'Drivers (${drivers.length})', Icons.badge_rounded),
+        const SizedBox(height: 8),
+        if (drivers.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 4),
+            child: Text('No drivers registered.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+          )
+        else
+          ...drivers.map((d) => Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                ),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                    child: Icon(Icons.person_rounded, color: theme.colorScheme.primary, size: 20),
+                  ),
+                  title: Text(
+                    d['driver_name'] ?? 'N/A',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: d['license'] != null
+                      ? Text('License: ${d['license']}')
+                      : const Text('Driver'),
+                ),
+              )),
+        const SizedBox(height: 16),
+        _buildSectionHeader(theme, 'Attendants (${attendants.length})', Icons.supervised_user_circle_rounded),
+        const SizedBox(height: 8),
+        if (attendants.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 4),
+            child: Text('No attendants registered.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+          )
+        else
+          ...attendants.map((a) => Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                ),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: theme.colorScheme.secondaryContainer.withOpacity(0.3),
+                    child: Icon(Icons.person_outline_rounded, color: theme.colorScheme.secondary, size: 20),
+                  ),
+                  title: Text(
+                    a['attendant_name'] ?? 'N/A',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: const Text('Attendant'),
+                ),
+              )),
+      ],
+    );
+  }
+
+  Widget _buildVehiclesTab(List<dynamic> vehicles, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(theme, 'Registered Vehicles (${vehicles.length})', Icons.directions_bus_rounded),
+        const SizedBox(height: 8),
+        if (vehicles.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 4),
+            child: Text('No vehicles registered.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+          )
+        else
+          ...vehicles.map((v) => Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+                ),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                    child: Icon(Icons.directions_bus_rounded, color: theme.colorScheme.primary, size: 20),
+                  ),
+                  title: Text(
+                    v['registration_number'] ?? 'N/A',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(v['type'] ?? 'Vehicle'),
+                ),
+              )),
+      ],
+    );
+  }
+
+  Widget _buildTripsTab(List<dynamic> trips, ThemeData theme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(theme, 'Organization Trips (${trips.length})', Icons.route_rounded),
+        const SizedBox(height: 8),
+        if (trips.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 4),
+            child: Text('No trips scheduled.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+          )
+        else
+          ...trips.map((t) {
+            final routes = (t['routes'] as List?) ?? [];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.3)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            t['name'] ?? 'Trip Name',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.route_rounded, size: 12, color: theme.colorScheme.primary),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${routes.length} Route(s)',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (routes.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      ...routes.map((r) {
+                        final isLive = r['is_tracking'] == true;
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.brightness == Brightness.dark
+                                ? Colors.grey.shade900.withOpacity(0.5)
+                                : Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: theme.colorScheme.outlineVariant.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    r['route_name'] ?? 'Route',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: isLive ? Colors.green.withOpacity(0.15) : Colors.grey.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 6,
+                                          height: 6,
+                                          decoration: BoxDecoration(
+                                            color: isLive ? Colors.green : Colors.grey,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          isLive ? 'LIVE' : 'OFFLINE',
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: isLive ? Colors.green : Colors.grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(Icons.directions_bus_rounded, size: 14, color: theme.colorScheme.primary),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Vehicle: ${r['vehicle_number']}',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.person_rounded, size: 14, color: theme.colorScheme.secondary),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Driver: ${r['driver_name']}',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Icon(Icons.person_outline_rounded, size: 14, color: theme.colorScheme.secondary),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Attendant: ${r['attendant_name']}',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          }),
+      ],
     );
   }
 
