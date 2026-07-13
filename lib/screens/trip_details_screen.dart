@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import '../services/location_service.dart';
 
 class TripDetailsScreen extends StatefulWidget {
@@ -14,6 +16,11 @@ class TripDetailsScreen extends StatefulWidget {
 class _TripDetailsScreenState extends State<TripDetailsScreen> {
   bool _isTracking = false;
   bool _isLoading = false;
+  double? _currentLat;
+  double? _currentLng;
+  double? _currentSpeed;
+  DateTime? _lastUpdated;
+  StreamSubscription? _updateSubscription;
 
   @override
   void initState() {
@@ -22,6 +29,24 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     if (tripId != null) {
       _isTracking = LocationService().isTracking && LocationService().activeTripId == tripId;
     }
+
+    // Start listening to background location updates
+    _updateSubscription = FlutterBackgroundService().on('update').listen((event) {
+      if (event != null && mounted) {
+        setState(() {
+          _currentLat = event['latitude'] as double?;
+          _currentLng = event['longitude'] as double?;
+          _currentSpeed = event['speed'] as double?;
+          _lastUpdated = DateTime.tryParse(event['time'] ?? '');
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _updateSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _makeCall(String number) async {
@@ -108,6 +133,94 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 0. Live Tracking Dashboard Card
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: _isTracking 
+                      ? Colors.green.withOpacity(0.4) 
+                      : theme.colorScheme.outlineVariant.withOpacity(0.4),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.sensors_rounded,
+                              color: _isTracking ? Colors.green : Colors.grey,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Live Location Sharing',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: _isTracking ? Colors.green.shade700 : Colors.black87,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_isLoading)
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        else
+                          Switch.adaptive(
+                            value: _isTracking,
+                            activeColor: Colors.green,
+                            onChanged: _isLoading ? null : (_) => _toggleTracking(),
+                          ),
+                      ],
+                    ),
+                    if (_isTracking) ...[
+                      const Divider(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildDashboardItem(
+                            context,
+                            Icons.my_location_rounded,
+                            'Coordinates',
+                            _currentLat != null && _currentLng != null
+                                ? '${_currentLat!.toStringAsFixed(4)}, ${_currentLng!.toStringAsFixed(4)}'
+                                : 'Fetching...',
+                          ),
+                          _buildDashboardItem(
+                            context,
+                            Icons.speed_rounded,
+                            'Speed',
+                            _currentSpeed != null
+                                ? '${(_currentSpeed! * 3.6).toStringAsFixed(1)} km/h'
+                                : '0.0 km/h',
+                          ),
+                          _buildDashboardItem(
+                            context,
+                            Icons.access_time_rounded,
+                            'Last Update',
+                            _lastUpdated != null
+                                ? '${_lastUpdated!.hour.toString().padLeft(2, '0')}:${_lastUpdated!.minute.toString().padLeft(2, '0')}:${_lastUpdated!.second.toString().padLeft(2, '0')}'
+                                : 'Just now',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
             // 1. Trip Summary Header Card
             Card(
               elevation: 3,
@@ -240,37 +353,6 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
             ),
             const SizedBox(height: 16),
 
-            // 2. Go Live Button
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: _isLoading ? null : _toggleTracking,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isTracking ? Colors.red : Colors.green,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-                icon: _isLoading 
-                    ? const SizedBox(
-                        width: 18, 
-                        height: 18, 
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                      )
-                    : Icon(_isTracking ? Icons.portable_wifi_off_rounded : Icons.sensors_rounded),
-                label: Text(
-                  _isLoading 
-                      ? 'Processing...' 
-                      : _isTracking 
-                          ? 'STOP LIVE SHARING' 
-                          : 'GO LIVE',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, letterSpacing: 0.5),
-                ),
-              ),
-            ),
             const SizedBox(height: 24),
 
             // Section Title
@@ -535,6 +617,27 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardItem(BuildContext context, IconData icon, String label, String value) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, size: 16, color: Colors.grey.shade500),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 10),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

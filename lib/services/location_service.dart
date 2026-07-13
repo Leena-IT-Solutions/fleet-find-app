@@ -276,6 +276,14 @@ void onStart(ServiceInstance service) async {
           }),
         );
 
+        // Broadcast to UI
+        service.invoke('update', {
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+          'speed': position.speed,
+          'time': DateTime.now().toIso8601String(),
+        });
+
         if (service is AndroidServiceInstance) {
           service.setForegroundNotificationInfo(
             title: 'FleetFind Live Route Tracking',
