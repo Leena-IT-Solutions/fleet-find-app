@@ -52,27 +52,33 @@ class LocationService {
   // Request permissions and start tracking a specific trip
   Future<bool> startTripTracking(int tripId) async {
     // 1. Request foreground location permission
-    var status = await Permission.locationWhenInUse.request();
+    var status = await Permission.locationWhenInUse.status;
     if (!status.isGranted) {
-      return false;
+      status = await Permission.locationWhenInUse.request();
+      if (!status.isGranted) {
+        throw Exception('Location permission (when in use) is required to start tracking.');
+      }
     }
 
     // 2. Request background location permission
-    var bgStatus = await Permission.locationAlways.request();
+    var bgStatus = await Permission.locationAlways.status;
     if (!bgStatus.isGranted) {
-      // Background location permission is recommended for keeping tracking alive
+      bgStatus = await Permission.locationAlways.request();
+      if (!bgStatus.isGranted) {
+        throw Exception('Background location access (Allow all the time) is required to share location when the screen is locked.');
+      }
     }
 
     // 3. Make sure location services are enabled
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      return false;
+      throw Exception('Location services are disabled on this device. Please turn on GPS/Location in system settings.');
     }
 
     // 4. Toggle tracking on backend first
     final toggleRes = await ApiService.toggleTripTracking(tripId, true);
     if (toggleRes['success'] != true) {
-      return false;
+      throw Exception(toggleRes['message'] ?? 'Failed to enable tracking on the server.');
     }
 
     _activeTripId = tripId;
