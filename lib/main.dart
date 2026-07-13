@@ -1392,7 +1392,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                 onTap: () async {
                   final result = await Navigator.pushNamed(
                     context,
-                    '/child-detail',
+                    '/child-track',
                     arguments: child,
                   );
                   if (result == true) {
