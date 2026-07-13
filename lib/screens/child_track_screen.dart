@@ -227,8 +227,8 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
       markers.add(
         Marker(
           point: LatLng(lat, lng),
-          width: 40,
-          height: 40,
+          width: 50,
+          height: 55,
           child: Column(
             children: [
               Icon(
