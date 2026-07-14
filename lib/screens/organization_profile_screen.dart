@@ -46,7 +46,7 @@ class OrganizationProfileScreen extends StatelessWidget {
     final String email = org['email'] ?? 'N/A';
     final String number = org['number'] ?? 'N/A';
     final String address = org['address'] ?? 'N/A';
-    final String? logo = org['logo'] as String?;
+    final String? logo = ApiService.getLogoUrl(org['logo'] as String?);
 
     final bool showEmail = org['show_email'] == true || org['show_email'] == 1 || org['show_email'] == null;
     final bool showPhone = org['show_phone'] == true || org['show_phone'] == 1 || org['show_phone'] == null;

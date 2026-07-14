@@ -5,6 +5,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   static const String baseUrl = 'https://wheelstracker.infoleena.com/api';
 
+  // Helper to format organization logo URL
+  static String? getLogoUrl(String? logoPath) {
+    if (logoPath == null || logoPath.isEmpty) return null;
+    if (logoPath.startsWith('http')) return logoPath;
+    return 'https://wheelstracker.infoleena.com/storage/$logoPath';
+  }
+
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
 

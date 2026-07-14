@@ -2847,7 +2847,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
         final orgEmail = org['email'] ?? 'N/A';
         final orgPhone = org['number'] ?? 'N/A';
         final orgAddress = org['address'] ?? 'N/A';
-        final orgLogo = org['logo'] as String?;
+        final orgLogo = ApiService.getLogoUrl(org['logo'] as String?);
 
         final vehiclesCount = org['vehicles_count']?.toString() ?? '0';
         final driversCount = org['drivers_count']?.toString() ?? '0';
@@ -2929,13 +2929,30 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                   padding: const EdgeInsets.all(20.0),
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 36,
-                        backgroundColor: theme.colorScheme.primaryContainer,
-                        backgroundImage: orgLogo != null && orgLogo.isNotEmpty && orgLogo.startsWith('http') ? NetworkImage(orgLogo) : null,
-                        child: orgLogo == null || orgLogo.isEmpty || !orgLogo.startsWith('http')
-                            ? Icon(Icons.business_rounded, size: 36, color: theme.colorScheme.onPrimaryContainer)
-                            : null,
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: theme.colorScheme.primaryContainer,
+                        ),
+                        child: ClipOval(
+                          child: orgLogo != null && orgLogo.isNotEmpty && orgLogo.startsWith('http')
+                              ? Image.network(
+                                  orgLogo,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) => Icon(
+                                    Icons.business_rounded,
+                                    size: 36,
+                                    color: theme.colorScheme.onPrimaryContainer,
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.business_rounded,
+                                  size: 36,
+                                  color: theme.colorScheme.onPrimaryContainer,
+                                ),
+                        ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -4448,7 +4465,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                         final org = _searchResults[index];
                         final name = org['name'] ?? 'N/A';
                         final address = org['address'] ?? 'N/A';
-                        final logo = org['logo'] as String?;
+                        final logo = ApiService.getLogoUrl(org['logo'] as String?);
 
                         return Card(
                           elevation: 0,
@@ -4470,17 +4487,30 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                             borderRadius: BorderRadius.circular(16),
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              leading: CircleAvatar(
-                                radius: 20,
-                                backgroundColor: theme.colorScheme.primaryContainer,
-                                backgroundImage: logo != null && logo.isNotEmpty && logo.startsWith('http') ? NetworkImage(logo) : null,
-                                child: logo == null || logo.isEmpty || !logo.startsWith('http')
-                                    ? Icon(
-                                        Icons.business_rounded,
-                                        size: 20,
-                                        color: theme.colorScheme.onPrimaryContainer,
-                                      )
-                                    : null,
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: theme.colorScheme.primaryContainer,
+                                ),
+                                child: ClipOval(
+                                  child: logo != null && logo.isNotEmpty && logo.startsWith('http')
+                                      ? Image.network(
+                                          logo,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) => Icon(
+                                            Icons.business_rounded,
+                                            size: 20,
+                                            color: theme.colorScheme.onPrimaryContainer,
+                                          ),
+                                        )
+                                      : Icon(
+                                          Icons.business_rounded,
+                                          size: 20,
+                                          color: theme.colorScheme.onPrimaryContainer,
+                                        ),
+                                ),
                               ),
                               title: Text(
                                 name,
