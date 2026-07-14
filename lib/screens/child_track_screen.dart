@@ -6,6 +6,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../services/api_service.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class ChildTrackScreen extends StatefulWidget {
   const ChildTrackScreen({super.key});
@@ -59,6 +60,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2500),
@@ -485,6 +487,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
 
   @override
   void dispose() {
+    WakelockPlus.disable();
     _timer?.cancel();
     _animationController?.dispose();
     _mapController.dispose();
