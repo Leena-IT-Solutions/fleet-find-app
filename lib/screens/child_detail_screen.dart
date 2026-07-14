@@ -16,6 +16,7 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
   Map<String, dynamic>? _childDetails;
   bool _isLoading = true;
   String _errorMsg = '';
+  bool _isDirty = false;
 
   @override
   void didChangeDependencies() {
@@ -153,6 +154,7 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Profile photo updated successfully')),
           );
+          _isDirty = true;
           _fetchDetails();
         } else {
           setState(() {
@@ -276,6 +278,7 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
       builder: (context) => _EditChildBottomSheet(
         child: _childDetails!,
         onSaved: () {
+          _isDirty = true;
           _fetchDetails();
         },
       ),
@@ -455,15 +458,27 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
       } catch (_) {}
     }
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(child['name'] ?? 'Child Profile'),
-        centerTitle: false,
-        backgroundColor: theme.brightness == Brightness.dark ? const Color(0xFF1E2A38) : theme.colorScheme.primary,
-        foregroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        if (context.mounted) {
+          Navigator.pop(context, _isDirty);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          title: Text(child['name'] ?? 'Child Profile'),
+          centerTitle: false,
+          backgroundColor: theme.brightness == Brightness.dark ? const Color(0xFF1E2A38) : theme.colorScheme.primary,
+          foregroundColor: Colors.white,
+          iconTheme: const IconThemeData(color: Colors.white),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.pop(context, _isDirty),
+          ),
+          actions: [
           IconButton(
             icon: const Icon(Icons.edit_rounded),
             onPressed: _showEditChildBottomSheet,
@@ -773,6 +788,7 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
