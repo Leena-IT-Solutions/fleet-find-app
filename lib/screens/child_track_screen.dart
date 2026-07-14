@@ -576,29 +576,13 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
       markers.add(
         Marker(
           point: _animatedBusPosition!,
-          width: 50,
-          height: 50,
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 8,
-                  spreadRadius: 2,
-                )
-              ],
-            ),
-            child: Transform.rotate(
-              angle: _busRotation,
-              child: Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Image.asset(
-                  'assets/bus_marker.png',
-                  fit: BoxFit.contain,
-                ),
-              ),
+          width: 60,
+          height: 60,
+          child: Transform.rotate(
+            angle: _busRotation,
+            child: Image.asset(
+              'assets/bus_marker.png',
+              fit: BoxFit.contain,
             ),
           ),
         ),
