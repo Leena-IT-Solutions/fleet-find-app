@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/api_service.dart';
 
 class ChildDetailScreen extends StatefulWidget {
@@ -52,6 +54,124 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
           _errorMsg = response['message'] ?? 'Failed to load details';
         }
       });
+    }
+  }
+
+  Future<void> _pickAndUploadImage() async {
+    final ImagePicker picker = ImagePicker();
+    
+    // Show picker source dialog/bottom sheet
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        final theme = Theme.of(context);
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Change Profile Photo',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  InkWell(
+                    onTap: () => Navigator.pop(context, ImageSource.camera),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: Colors.blue.shade50,
+                          child: const Icon(Icons.camera_alt_rounded, size: 28, color: Colors.blue),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('Camera'),
+                      ],
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => Navigator.pop(context, ImageSource.gallery),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: Colors.green.shade50,
+                          child: const Icon(Icons.photo_library_rounded, size: 28, color: Colors.green),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('Gallery'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source == null) return;
+
+    final XFile? pickedFile = await picker.pickImage(
+      source: source,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 85,
+    );
+
+    if (pickedFile == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final bytes = await pickedFile.readAsBytes();
+      final base64Image = base64Encode(bytes);
+      
+      final response = await ApiService.updateChild(
+        _childId!,
+        name: _childDetails?['name'] ?? '',
+        dob: _childDetails?['dob'],
+        gender: _childDetails?['gender'],
+        photoBase64: base64Image,
+        relationshipType: _childDetails?['relationship_type'],
+      );
+
+      if (mounted) {
+        if (response['success'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile photo updated successfully')),
+          );
+          _fetchDetails();
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(response['message'] ?? 'Failed to update profile photo')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating photo: $e')),
+        );
+      }
     }
   }
 
@@ -364,13 +484,34 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
               padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 64,
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    backgroundImage: photoUrl != null && photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-                    child: photoUrl == null || photoUrl.isEmpty
-                        ? Icon(Icons.face_rounded, size: 64, color: theme.colorScheme.primary)
-                        : null,
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 64,
+                        backgroundColor: theme.colorScheme.primaryContainer,
+                        backgroundImage: photoUrl != null && photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
+                        child: photoUrl == null || photoUrl.isEmpty
+                            ? Icon(Icons.face_rounded, size: 64, color: theme.colorScheme.primary)
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: InkWell(
+                          onTap: _pickAndUploadImage,
+                          borderRadius: BorderRadius.circular(20),
+                          child: CircleAvatar(
+                            radius: 18,
+                            backgroundColor: theme.colorScheme.primary,
+                            child: const Icon(
+                              Icons.camera_alt_rounded,
+                              size: 18,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 20),
                   Text(
