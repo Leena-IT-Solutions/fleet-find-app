@@ -137,7 +137,7 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
 
     try {
       final bytes = await pickedFile.readAsBytes();
-      final base64Image = base64Encode(bytes);
+      final base64Image = 'data:image/${pickedFile.path.split('.').last};base64,${base64Encode(bytes)}';
       
       final response = await ApiService.updateChild(
         _childId!,
