@@ -656,7 +656,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> with SingleTicker
           children: [
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.infoleena.wheelstracker',
+              userAgentPackageName: 'com.infoleena.wheels.tracker',
             ),
             MarkerLayer(markers: markers),
           ],

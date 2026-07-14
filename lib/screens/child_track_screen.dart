@@ -783,7 +783,7 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
                             children: [
                               TileLayer(
                                 urlTemplate: tileUrl,
-                                userAgentPackageName: 'com.infoleena.wheelstracker',
+                                userAgentPackageName: 'com.infoleena.wheels.tracker',
                               ),
                               PolylineLayer(polylines: polylines),
                               MarkerLayer(markers: markers),
