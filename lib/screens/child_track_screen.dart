@@ -592,10 +592,12 @@ class _ChildTrackScreenState extends State<ChildTrackScreen> with SingleTickerPr
             ),
             child: Transform.rotate(
               angle: _busRotation,
-              child: const Icon(
-                Icons.directions_bus_rounded,
-                color: Colors.amber,
-                size: 32,
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Image.asset(
+                  'assets/bus_marker.png',
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),
