@@ -1128,19 +1128,30 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                                   children: [
                                     Row(
                                       children: [
-                                        CircleAvatar(
-                                          radius: 26,
-                                          backgroundColor: theme.colorScheme.primaryContainer,
-                                          backgroundImage: childPhoto != null && childPhoto.isNotEmpty && childPhoto.startsWith('http')
-                                              ? NetworkImage(childPhoto)
-                                              : null,
-                                          child: childPhoto == null || childPhoto.isEmpty || !childPhoto.startsWith('http')
-                                              ? Icon(
-                                                  Icons.face_rounded,
-                                                  size: 28,
-                                                  color: theme.colorScheme.primary,
-                                                )
-                                              : null,
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(26),
+                                          child: Container(
+                                            width: 52,
+                                            height: 52,
+                                            color: theme.colorScheme.primaryContainer,
+                                            child: childPhoto != null && childPhoto.isNotEmpty && childPhoto.startsWith('http')
+                                                ? Image.network(
+                                                    childPhoto,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder: (context, error, stackTrace) {
+                                                      return Icon(
+                                                        Icons.face_rounded,
+                                                        size: 28,
+                                                        color: theme.colorScheme.primary,
+                                                      );
+                                                    },
+                                                  )
+                                                : Icon(
+                                                    Icons.face_rounded,
+                                                    size: 28,
+                                                    color: theme.colorScheme.primary,
+                                                  ),
+                                          ),
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
@@ -1629,19 +1640,30 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                               children: [
                                 Row(
                                   children: [
-                                    CircleAvatar(
-                                      radius: 26,
-                                      backgroundColor: theme.colorScheme.primaryContainer,
-                                      backgroundImage: childPhoto != null && childPhoto.isNotEmpty && childPhoto.startsWith('http')
-                                          ? NetworkImage(childPhoto)
-                                          : null,
-                                      child: childPhoto == null || childPhoto.isEmpty || !childPhoto.startsWith('http')
-                                          ? Icon(
-                                              Icons.face_rounded,
-                                              size: 28,
-                                              color: theme.colorScheme.primary,
-                                            )
-                                          : null,
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(26),
+                                      child: Container(
+                                        width: 52,
+                                        height: 52,
+                                        color: theme.colorScheme.primaryContainer,
+                                        child: childPhoto != null && childPhoto.isNotEmpty && childPhoto.startsWith('http')
+                                            ? Image.network(
+                                                childPhoto,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (context, error, stackTrace) {
+                                                  return Icon(
+                                                    Icons.face_rounded,
+                                                    size: 28,
+                                                    color: theme.colorScheme.primary,
+                                                  );
+                                                },
+                                              )
+                                            : Icon(
+                                                Icons.face_rounded,
+                                                size: 28,
+                                                color: theme.colorScheme.primary,
+                                              ),
+                                      ),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
@@ -5237,21 +5259,32 @@ class _AddChildBottomSheetState extends State<_AddChildBottomSheet> {
               Center(
                 child: Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
-                      backgroundImage: _imageFile != null
-                          ? FileImage(_imageFile!)
-                          : (widget.child != null && widget.child!['photo'] != null && widget.child!['photo'].toString().isNotEmpty && widget.child!['photo'].toString().startsWith('http'))
-                              ? NetworkImage(widget.child!['photo']) as ImageProvider
-                              : null,
-                      child: _imageFile == null && (widget.child == null || widget.child!['photo'] == null || widget.child!['photo'].toString().isEmpty || !widget.child!['photo'].toString().startsWith('http'))
-                          ? Icon(
-                              Icons.face_rounded,
-                              size: 56,
-                              color: theme.colorScheme.primary,
-                            )
-                          : null,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(50),
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                        child: _imageFile != null
+                            ? Image.file(_imageFile!, fit: BoxFit.cover)
+                            : (widget.child != null && widget.child!['photo'] != null && widget.child!['photo'].toString().isNotEmpty && widget.child!['photo'].toString().startsWith('http'))
+                                ? Image.network(
+                                    widget.child!['photo'],
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Icon(
+                                        Icons.face_rounded,
+                                        size: 56,
+                                        color: theme.colorScheme.primary,
+                                      );
+                                    },
+                                  )
+                                : Icon(
+                                    Icons.face_rounded,
+                                    size: 56,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                      ),
                     ),
                     Positioned(
                       bottom: 0,

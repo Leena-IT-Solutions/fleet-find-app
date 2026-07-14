@@ -486,13 +486,30 @@ class _ChildDetailScreenState extends State<ChildDetailScreen> {
                 children: [
                   Stack(
                     children: [
-                      CircleAvatar(
-                        radius: 64,
-                        backgroundColor: theme.colorScheme.primaryContainer,
-                        backgroundImage: photoUrl != null && photoUrl.isNotEmpty ? NetworkImage(photoUrl) : null,
-                        child: photoUrl == null || photoUrl.isEmpty
-                            ? Icon(Icons.face_rounded, size: 64, color: theme.colorScheme.primary)
-                            : null,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(64),
+                        child: Container(
+                          width: 128,
+                          height: 128,
+                          color: theme.colorScheme.primaryContainer,
+                          child: photoUrl != null && photoUrl.isNotEmpty
+                              ? Image.network(
+                                  photoUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(
+                                      Icons.face_rounded,
+                                      size: 64,
+                                      color: theme.colorScheme.primary,
+                                    );
+                                  },
+                                )
+                              : Icon(
+                                  Icons.face_rounded,
+                                  size: 64,
+                                  color: theme.colorScheme.primary,
+                                ),
+                        ),
                       ),
                       Positioned(
                         bottom: 0,
